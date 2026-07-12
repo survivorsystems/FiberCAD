@@ -20,33 +20,137 @@
 
     <main class="page-main">
       <section class="page-title">
-        <p class="eyebrow">Pattern workspace</p>
-        <h1>Create your own pattern</h1>
+        <p class="eyebrow">Rules-based simulator</p>
+        <h1>Preview Builder</h1>
         <p>
-          This will become the chart builder: a crochet grid, stitch toolbar, color palette,
-          symbol legend, and finished-project preview.
+          Choose your yarn, hook, stitch, stitch count, and rows to generate a deterministic
+          crochet mockup before you commit hours to the real project.
         </p>
       </section>
 
-      <section class="workspace-panel" aria-label="Pattern creation roadmap">
-        <div class="tool-grid">
-          <article class="tool-tile">
-            <span class="tile-icon">+</span>
-            <strong>Stitch toolbar</strong>
-            <span>Choose chain, slip stitch, single crochet, double crochet, increase, and decrease.</span>
-          </article>
-          <article class="tool-tile">
-            <span class="tile-icon">#</span>
-            <strong>Chart grid</strong>
-            <span>Paint stitches and colors into rows while the symbol chart updates in place.</span>
-          </article>
-          <article class="tool-tile">
-            <span class="tile-icon">~</span>
-            <strong>Fabric preview</strong>
-            <span>Estimate size, texture, stripe rhythm, and finished appearance from the chart data.</span>
-          </article>
+      <section class="workspace-panel preview-builder" aria-label="Preview Builder">
+        <form class="builder-form" data-preview-form>
+          <fieldset>
+            <legend>Tools</legend>
+            <label>
+              Yarn weight
+              <select name="yarnWeight" data-preview-input>
+                <option value="lace">0 Lace</option>
+                <option value="superFine">1 Super fine / fingering</option>
+                <option value="fine">2 Fine / sport</option>
+                <option value="light">3 Light / DK</option>
+                <option value="medium" selected>4 Medium / worsted</option>
+                <option value="bulky">5 Bulky / chunky</option>
+                <option value="superBulky">6 Super bulky</option>
+                <option value="jumbo">7 Jumbo</option>
+              </select>
+            </label>
+            <label>
+              Hook size
+              <select name="hookSize" data-preview-input>
+                <option value="2.25">2.25 mm / B-1</option>
+                <option value="3.25">3.25 mm / D-3</option>
+                <option value="3.5">3.5 mm / E-4</option>
+                <option value="4">4.0 mm / G-6</option>
+                <option value="5" selected>5.0 mm / H-8</option>
+                <option value="5.5">5.5 mm / I-9</option>
+                <option value="6">6.0 mm / J-10</option>
+                <option value="6.5">6.5 mm / K-10.5</option>
+                <option value="8">8.0 mm / L-11</option>
+                <option value="10">10.0 mm / N/P-15</option>
+                <option value="15">15.0 mm / P/Q</option>
+              </select>
+            </label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Stitches</legend>
+            <label>
+              Main stitch
+              <select name="stitchType" data-preview-input>
+                <option value="sc">sc - single crochet</option>
+                <option value="hdc">hdc - half double crochet</option>
+                <option value="dc" selected>dc - double crochet</option>
+                <option value="tr">tr - treble crochet</option>
+                <option value="vst">V-st - V-stitch</option>
+                <option value="shell">shell - 5 dc shell</option>
+                <option value="granny">granny cluster</option>
+                <option value="tss">tss - Tunisian simple stitch</option>
+              </select>
+            </label>
+            <label>
+              Stitches across
+              <input name="stitchCount" type="number" min="4" max="360" value="96" data-preview-input />
+            </label>
+            <label>
+              Rows
+              <input name="rowCount" type="number" min="2" max="240" value="72" data-preview-input />
+            </label>
+          </fieldset>
+
+          <fieldset>
+            <legend>Color</legend>
+            <label>
+              Color mode
+              <select name="colorMode" data-preview-input>
+                <option value="solid">Solid</option>
+                <option value="twoRowStripe">Two-row stripes</option>
+                <option value="wideStripe">Wide stripes</option>
+                <option value="mutedRainbow" selected>Muted rainbow</option>
+              </select>
+            </label>
+            <label>
+              Main color
+              <input name="primaryColor" type="color" value="#9f5f5d" data-preview-input />
+            </label>
+            <label>
+              Accent color
+              <input name="accentColor" type="color" value="#5f7f7a" data-preview-input />
+            </label>
+          </fieldset>
+        </form>
+
+        <div class="builder-output">
+          <section class="simulation-card fabric-card" aria-label="Crochet mockup">
+            <div class="simulation-header">
+              <div>
+                <h2>Mockup preview</h2>
+                <p data-preview-caption>Rendering from your current specs.</p>
+              </div>
+              <span>No AI</span>
+            </div>
+            <div class="fabric-preview" data-fabric-preview></div>
+          </section>
+
+          <section class="simulation-card" aria-label="Estimated project stats">
+            <h2>Estimated output</h2>
+            <dl class="stats-grid">
+              <div>
+                <dt>Finished size</dt>
+                <dd data-stat-size>--</dd>
+              </div>
+              <div>
+                <dt>Gauge estimate</dt>
+                <dd data-stat-gauge>--</dd>
+              </div>
+              <div>
+                <dt>Stitch plan</dt>
+                <dd data-stat-plan>--</dd>
+              </div>
+              <div>
+                <dt>Texture</dt>
+                <dd data-stat-texture>--</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section class="simulation-card" aria-label="Preview Builder warnings">
+            <h2>Pattern checks</h2>
+            <ul class="warning-list" data-warning-list></ul>
+          </section>
         </div>
       </section>
     </main>
+    <script src="scripts/preview-builder.js"></script>
   </body>
 </html>
