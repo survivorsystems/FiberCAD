@@ -1,0 +1,967 @@
+{
+  "schemaVersion": "0.1.0",
+  "source": "Yarn_Stitch_Data_Table.pdf",
+  "basis": "Approximate stitch size, gauge, and hook ranges by CYC yarn weight and common crochet stitch.",
+  "entries": [
+    {
+      "yarnWeightId": "lace",
+      "stitchId": "slip-stitch",
+      "widthMmRange": [
+        2,
+        3
+      ],
+      "heightMmRange": [
+        2,
+        3
+      ],
+      "stitchesPer4InRange": [
+        24,
+        32
+      ],
+      "rowsPer4InRange": [
+        24,
+        36
+      ],
+      "hookMmRange": [
+        1.5,
+        2.25
+      ]
+    },
+    {
+      "yarnWeightId": "lace",
+      "stitchId": "single-crochet",
+      "widthMmRange": [
+        3,
+        3
+      ],
+      "heightMmRange": [
+        3,
+        3
+      ],
+      "stitchesPer4InRange": [
+        22,
+        30
+      ],
+      "rowsPer4InRange": [
+        22,
+        30
+      ],
+      "hookMmRange": [
+        1.75,
+        2.5
+      ]
+    },
+    {
+      "yarnWeightId": "lace",
+      "stitchId": "half-double-crochet",
+      "widthMmRange": [
+        3,
+        4
+      ],
+      "heightMmRange": [
+        4,
+        4
+      ],
+      "stitchesPer4InRange": [
+        20,
+        26
+      ],
+      "rowsPer4InRange": [
+        16,
+        24
+      ],
+      "hookMmRange": [
+        2.0,
+        2.75
+      ]
+    },
+    {
+      "yarnWeightId": "lace",
+      "stitchId": "double-crochet",
+      "widthMmRange": [
+        4,
+        4
+      ],
+      "heightMmRange": [
+        6,
+        6
+      ],
+      "stitchesPer4InRange": [
+        18,
+        24
+      ],
+      "rowsPer4InRange": [
+        12,
+        18
+      ],
+      "hookMmRange": [
+        2.25,
+        3.25
+      ]
+    },
+    {
+      "yarnWeightId": "lace",
+      "stitchId": "treble-crochet",
+      "widthMmRange": [
+        6,
+        6
+      ],
+      "heightMmRange": [
+        10,
+        10
+      ],
+      "stitchesPer4InRange": [
+        16,
+        22
+      ],
+      "rowsPer4InRange": [
+        8,
+        14
+      ],
+      "hookMmRange": [
+        2.5,
+        3.5
+      ]
+    },
+    {
+      "yarnWeightId": "superFine",
+      "stitchId": "slip-stitch",
+      "widthMmRange": [
+        3,
+        3
+      ],
+      "heightMmRange": [
+        3,
+        3
+      ],
+      "stitchesPer4InRange": [
+        20,
+        28
+      ],
+      "rowsPer4InRange": [
+        20,
+        30
+      ],
+      "hookMmRange": [
+        2.0,
+        2.75
+      ]
+    },
+    {
+      "yarnWeightId": "superFine",
+      "stitchId": "single-crochet",
+      "widthMmRange": [
+        3,
+        4
+      ],
+      "heightMmRange": [
+        3,
+        4
+      ],
+      "stitchesPer4InRange": [
+        18,
+        26
+      ],
+      "rowsPer4InRange": [
+        18,
+        26
+      ],
+      "hookMmRange": [
+        2.25,
+        3.25
+      ]
+    },
+    {
+      "yarnWeightId": "superFine",
+      "stitchId": "half-double-crochet",
+      "widthMmRange": [
+        4,
+        4
+      ],
+      "heightMmRange": [
+        4,
+        6
+      ],
+      "stitchesPer4InRange": [
+        16,
+        22
+      ],
+      "rowsPer4InRange": [
+        14,
+        20
+      ],
+      "hookMmRange": [
+        2.5,
+        3.5
+      ]
+    },
+    {
+      "yarnWeightId": "superFine",
+      "stitchId": "double-crochet",
+      "widthMmRange": [
+        4,
+        6
+      ],
+      "heightMmRange": [
+        6,
+        10
+      ],
+      "stitchesPer4InRange": [
+        14,
+        20
+      ],
+      "rowsPer4InRange": [
+        10,
+        16
+      ],
+      "hookMmRange": [
+        2.75,
+        4.0
+      ]
+    },
+    {
+      "yarnWeightId": "superFine",
+      "stitchId": "treble-crochet",
+      "widthMmRange": [
+        6,
+        8
+      ],
+      "heightMmRange": [
+        10,
+        13
+      ],
+      "stitchesPer4InRange": [
+        12,
+        18
+      ],
+      "rowsPer4InRange": [
+        8,
+        12
+      ],
+      "hookMmRange": [
+        3.0,
+        4.5
+      ]
+    },
+    {
+      "yarnWeightId": "fine",
+      "stitchId": "slip-stitch",
+      "widthMmRange": [
+        3,
+        4
+      ],
+      "heightMmRange": [
+        3,
+        4
+      ],
+      "stitchesPer4InRange": [
+        18,
+        24
+      ],
+      "rowsPer4InRange": [
+        18,
+        28
+      ],
+      "hookMmRange": [
+        2.5,
+        3.5
+      ]
+    },
+    {
+      "yarnWeightId": "fine",
+      "stitchId": "single-crochet",
+      "widthMmRange": [
+        4,
+        6
+      ],
+      "heightMmRange": [
+        4,
+        6
+      ],
+      "stitchesPer4InRange": [
+        16,
+        22
+      ],
+      "rowsPer4InRange": [
+        16,
+        24
+      ],
+      "hookMmRange": [
+        3.0,
+        4.0
+      ]
+    },
+    {
+      "yarnWeightId": "fine",
+      "stitchId": "half-double-crochet",
+      "widthMmRange": [
+        6,
+        6
+      ],
+      "heightMmRange": [
+        6,
+        10
+      ],
+      "stitchesPer4InRange": [
+        14,
+        20
+      ],
+      "rowsPer4InRange": [
+        12,
+        18
+      ],
+      "hookMmRange": [
+        3.25,
+        4.5
+      ]
+    },
+    {
+      "yarnWeightId": "fine",
+      "stitchId": "double-crochet",
+      "widthMmRange": [
+        6,
+        8
+      ],
+      "heightMmRange": [
+        10,
+        13
+      ],
+      "stitchesPer4InRange": [
+        12,
+        18
+      ],
+      "rowsPer4InRange": [
+        9,
+        14
+      ],
+      "hookMmRange": [
+        3.5,
+        5.0
+      ]
+    },
+    {
+      "yarnWeightId": "fine",
+      "stitchId": "treble-crochet",
+      "widthMmRange": [
+        8,
+        10
+      ],
+      "heightMmRange": [
+        13,
+        16
+      ],
+      "stitchesPer4InRange": [
+        10,
+        16
+      ],
+      "rowsPer4InRange": [
+        7,
+        11
+      ],
+      "hookMmRange": [
+        4.0,
+        5.5
+      ]
+    },
+    {
+      "yarnWeightId": "light",
+      "stitchId": "slip-stitch",
+      "widthMmRange": [
+        4,
+        6
+      ],
+      "heightMmRange": [
+        4,
+        6
+      ],
+      "stitchesPer4InRange": [
+        16,
+        22
+      ],
+      "rowsPer4InRange": [
+        18,
+        26
+      ],
+      "hookMmRange": [
+        3.25,
+        4.0
+      ]
+    },
+    {
+      "yarnWeightId": "light",
+      "stitchId": "single-crochet",
+      "widthMmRange": [
+        6,
+        6
+      ],
+      "heightMmRange": [
+        6,
+        6
+      ],
+      "stitchesPer4InRange": [
+        14,
+        20
+      ],
+      "rowsPer4InRange": [
+        14,
+        22
+      ],
+      "hookMmRange": [
+        3.5,
+        4.5
+      ]
+    },
+    {
+      "yarnWeightId": "light",
+      "stitchId": "half-double-crochet",
+      "widthMmRange": [
+        6,
+        8
+      ],
+      "heightMmRange": [
+        10,
+        10
+      ],
+      "stitchesPer4InRange": [
+        12,
+        18
+      ],
+      "rowsPer4InRange": [
+        10,
+        16
+      ],
+      "hookMmRange": [
+        4.0,
+        5.0
+      ]
+    },
+    {
+      "yarnWeightId": "light",
+      "stitchId": "double-crochet",
+      "widthMmRange": [
+        8,
+        10
+      ],
+      "heightMmRange": [
+        13,
+        13
+      ],
+      "stitchesPer4InRange": [
+        11,
+        16
+      ],
+      "rowsPer4InRange": [
+        8,
+        12
+      ],
+      "hookMmRange": [
+        4.0,
+        5.5
+      ]
+    },
+    {
+      "yarnWeightId": "light",
+      "stitchId": "treble-crochet",
+      "widthMmRange": [
+        10,
+        13
+      ],
+      "heightMmRange": [
+        16,
+        19
+      ],
+      "stitchesPer4InRange": [
+        9,
+        14
+      ],
+      "rowsPer4InRange": [
+        6,
+        10
+      ],
+      "hookMmRange": [
+        4.5,
+        6.0
+      ]
+    },
+    {
+      "yarnWeightId": "medium",
+      "stitchId": "slip-stitch",
+      "widthMmRange": [
+        6,
+        8
+      ],
+      "heightMmRange": [
+        3,
+        6
+      ],
+      "stitchesPer4InRange": [
+        14,
+        20
+      ],
+      "rowsPer4InRange": [
+        14,
+        22
+      ],
+      "hookMmRange": [
+        4.0,
+        5.0
+      ]
+    },
+    {
+      "yarnWeightId": "medium",
+      "stitchId": "single-crochet",
+      "widthMmRange": [
+        6,
+        8
+      ],
+      "heightMmRange": [
+        6,
+        8
+      ],
+      "stitchesPer4InRange": [
+        13,
+        17
+      ],
+      "rowsPer4InRange": [
+        14,
+        18
+      ],
+      "hookMmRange": [
+        4.5,
+        5.5
+      ]
+    },
+    {
+      "yarnWeightId": "medium",
+      "stitchId": "half-double-crochet",
+      "widthMmRange": [
+        8,
+        10
+      ],
+      "heightMmRange": [
+        8,
+        13
+      ],
+      "stitchesPer4InRange": [
+        12,
+        15
+      ],
+      "rowsPer4InRange": [
+        10,
+        14
+      ],
+      "hookMmRange": [
+        5.0,
+        6.0
+      ]
+    },
+    {
+      "yarnWeightId": "medium",
+      "stitchId": "double-crochet",
+      "widthMmRange": [
+        8,
+        13
+      ],
+      "heightMmRange": [
+        13,
+        16
+      ],
+      "stitchesPer4InRange": [
+        11,
+        14
+      ],
+      "rowsPer4InRange": [
+        7,
+        10
+      ],
+      "hookMmRange": [
+        5.0,
+        6.5
+      ]
+    },
+    {
+      "yarnWeightId": "medium",
+      "stitchId": "treble-crochet",
+      "widthMmRange": [
+        10,
+        13
+      ],
+      "heightMmRange": [
+        19,
+        25
+      ],
+      "stitchesPer4InRange": [
+        10,
+        13
+      ],
+      "rowsPer4InRange": [
+        5,
+        8
+      ],
+      "hookMmRange": [
+        5.5,
+        7.0
+      ]
+    },
+    {
+      "yarnWeightId": "bulky",
+      "stitchId": "slip-stitch",
+      "widthMmRange": [
+        8,
+        13
+      ],
+      "heightMmRange": [
+        6,
+        8
+      ],
+      "stitchesPer4InRange": [
+        10,
+        14
+      ],
+      "rowsPer4InRange": [
+        12,
+        18
+      ],
+      "hookMmRange": [
+        5.5,
+        7.0
+      ]
+    },
+    {
+      "yarnWeightId": "bulky",
+      "stitchId": "single-crochet",
+      "widthMmRange": [
+        8,
+        13
+      ],
+      "heightMmRange": [
+        8,
+        13
+      ],
+      "stitchesPer4InRange": [
+        9,
+        13
+      ],
+      "rowsPer4InRange": [
+        10,
+        15
+      ],
+      "hookMmRange": [
+        6.0,
+        8.0
+      ]
+    },
+    {
+      "yarnWeightId": "bulky",
+      "stitchId": "half-double-crochet",
+      "widthMmRange": [
+        13,
+        16
+      ],
+      "heightMmRange": [
+        13,
+        16
+      ],
+      "stitchesPer4InRange": [
+        8,
+        11
+      ],
+      "rowsPer4InRange": [
+        8,
+        12
+      ],
+      "hookMmRange": [
+        6.5,
+        9.0
+      ]
+    },
+    {
+      "yarnWeightId": "bulky",
+      "stitchId": "double-crochet",
+      "widthMmRange": [
+        13,
+        19
+      ],
+      "heightMmRange": [
+        16,
+        19
+      ],
+      "stitchesPer4InRange": [
+        7,
+        10
+      ],
+      "rowsPer4InRange": [
+        6,
+        9
+      ],
+      "hookMmRange": [
+        7.0,
+        10.0
+      ]
+    },
+    {
+      "yarnWeightId": "bulky",
+      "stitchId": "treble-crochet",
+      "widthMmRange": [
+        16,
+        22
+      ],
+      "heightMmRange": [
+        25,
+        32
+      ],
+      "stitchesPer4InRange": [
+        6,
+        9
+      ],
+      "rowsPer4InRange": [
+        4,
+        7
+      ],
+      "hookMmRange": [
+        8.0,
+        12.0
+      ]
+    },
+    {
+      "yarnWeightId": "superBulky",
+      "stitchId": "slip-stitch",
+      "widthMmRange": [
+        13,
+        16
+      ],
+      "heightMmRange": [
+        8,
+        13
+      ],
+      "stitchesPer4InRange": [
+        7,
+        10
+      ],
+      "rowsPer4InRange": [
+        9,
+        14
+      ],
+      "hookMmRange": [
+        8.0,
+        10.0
+      ]
+    },
+    {
+      "yarnWeightId": "superBulky",
+      "stitchId": "single-crochet",
+      "widthMmRange": [
+        13,
+        16
+      ],
+      "heightMmRange": [
+        13,
+        16
+      ],
+      "stitchesPer4InRange": [
+        6,
+        9
+      ],
+      "rowsPer4InRange": [
+        7,
+        11
+      ],
+      "hookMmRange": [
+        9.0,
+        12.0
+      ]
+    },
+    {
+      "yarnWeightId": "superBulky",
+      "stitchId": "half-double-crochet",
+      "widthMmRange": [
+        16,
+        19
+      ],
+      "heightMmRange": [
+        16,
+        19
+      ],
+      "stitchesPer4InRange": [
+        5,
+        8
+      ],
+      "rowsPer4InRange": [
+        6,
+        9
+      ],
+      "hookMmRange": [
+        10.0,
+        15.0
+      ]
+    },
+    {
+      "yarnWeightId": "superBulky",
+      "stitchId": "double-crochet",
+      "widthMmRange": [
+        19,
+        25
+      ],
+      "heightMmRange": [
+        19,
+        25
+      ],
+      "stitchesPer4InRange": [
+        4,
+        7
+      ],
+      "rowsPer4InRange": [
+        4,
+        7
+      ],
+      "hookMmRange": [
+        10.0,
+        16.0
+      ]
+    },
+    {
+      "yarnWeightId": "superBulky",
+      "stitchId": "treble-crochet",
+      "widthMmRange": [
+        25,
+        32
+      ],
+      "heightMmRange": [
+        32,
+        38
+      ],
+      "stitchesPer4InRange": [
+        3,
+        6
+      ],
+      "rowsPer4InRange": [
+        3,
+        5
+      ],
+      "hookMmRange": [
+        12.0,
+        19.0
+      ]
+    },
+    {
+      "yarnWeightId": "jumbo",
+      "stitchId": "slip-stitch",
+      "widthMmRange": [
+        16,
+        25
+      ],
+      "heightMmRange": [
+        13,
+        19
+      ],
+      "stitchesPer4InRange": [
+        4,
+        7
+      ],
+      "rowsPer4InRange": [
+        6,
+        10
+      ],
+      "hookMmRange": [
+        12.0,
+        16.0
+      ]
+    },
+    {
+      "yarnWeightId": "jumbo",
+      "stitchId": "single-crochet",
+      "widthMmRange": [
+        19,
+        32
+      ],
+      "heightMmRange": [
+        16,
+        25
+      ],
+      "stitchesPer4InRange": [
+        3,
+        6
+      ],
+      "rowsPer4InRange": [
+        4,
+        8
+      ],
+      "hookMmRange": [
+        15.0,
+        20.0
+      ]
+    },
+    {
+      "yarnWeightId": "jumbo",
+      "stitchId": "half-double-crochet",
+      "widthMmRange": [
+        25,
+        38
+      ],
+      "heightMmRange": [
+        19,
+        32
+      ],
+      "stitchesPer4InRange": [
+        3,
+        5
+      ],
+      "rowsPer4InRange": [
+        3,
+        6
+      ],
+      "hookMmRange": [
+        16.0,
+        25.0
+      ]
+    },
+    {
+      "yarnWeightId": "jumbo",
+      "stitchId": "double-crochet",
+      "widthMmRange": [
+        32,
+        44
+      ],
+      "heightMmRange": [
+        25,
+        38
+      ],
+      "stitchesPer4InRange": [
+        2,
+        4
+      ],
+      "rowsPer4InRange": [
+        2,
+        5
+      ],
+      "hookMmRange": [
+        19.0,
+        30.0
+      ]
+    },
+    {
+      "yarnWeightId": "jumbo",
+      "stitchId": "treble-crochet",
+      "widthMmRange": [
+        38,
+        51
+      ],
+      "heightMmRange": [
+        38,
+        57
+      ],
+      "stitchesPer4InRange": [
+        2,
+        3
+      ],
+      "rowsPer4InRange": [
+        2,
+        4
+      ],
+      "hookMmRange": [
+        20.0,
+        35.0
+      ]
+    }
+  ]
+}

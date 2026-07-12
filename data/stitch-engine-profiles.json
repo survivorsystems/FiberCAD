@@ -1,0 +1,558 @@
+{
+  "schemaVersion": "0.1.0",
+  "source": "StitchDefinitions.pdf",
+  "profiles": [
+    {
+      "id": "slip-stitch",
+      "name": "Slip stitch",
+      "abbr": "sl st",
+      "baseStitchMultiple": 1,
+      "extraFoundationChains": 0,
+      "turningChain": [
+        0,
+        1
+      ],
+      "turningChainCountsAsStitch": "No",
+      "relativeRowHeight": 0.35,
+      "fabricDensity": "Very dense",
+      "engineNotes": "Short rows; strong horizontal stretch; can become very tight"
+    },
+    {
+      "id": "single-crochet",
+      "name": "Single crochet",
+      "abbr": "sc",
+      "baseStitchMultiple": 1,
+      "extraFoundationChains": 1,
+      "turningChain": 1,
+      "turningChainCountsAsStitch": "Usually no",
+      "relativeRowHeight": 1,
+      "fabricDensity": "Dense",
+      "engineNotes": "Work first stitch in second chain from hook"
+    },
+    {
+      "id": "extended-single-crochet",
+      "name": "Extended single crochet",
+      "abbr": "esc",
+      "baseStitchMultiple": 1,
+      "extraFoundationChains": 1,
+      "turningChain": 1,
+      "turningChainCountsAsStitch": "Usually no",
+      "relativeRowHeight": 1.25,
+      "fabricDensity": "Medium-dense",
+      "engineNotes": "Taller than single crochet without becoming as open as half-double crochet"
+    },
+    {
+      "id": "waistcoat-stitch",
+      "name": "Waistcoat stitch",
+      "abbr": "wc or center sc",
+      "baseStitchMultiple": 1,
+      "extraFoundationChains": 1,
+      "turningChain": 1,
+      "turningChainCountsAsStitch": "No",
+      "relativeRowHeight": 1,
+      "fabricDensity": "Very dense",
+      "engineNotes": "Insert between the vertical legs of the single crochet; usually requires looser tension"
+    },
+    {
+      "id": "back-loop-single-crochet",
+      "name": "Back-loop single crochet",
+      "abbr": "BLO sc",
+      "baseStitchMultiple": 1,
+      "extraFoundationChains": 1,
+      "turningChain": 1,
+      "turningChainCountsAsStitch": "No",
+      "relativeRowHeight": 0.9,
+      "fabricDensity": "Medium-dense",
+      "engineNotes": "Creates horizontal ridges and additional stretch"
+    },
+    {
+      "id": "front-loop-single-crochet",
+      "name": "Front-loop single crochet",
+      "abbr": "FLO sc",
+      "baseStitchMultiple": 1,
+      "extraFoundationChains": 1,
+      "turningChain": 1,
+      "turningChainCountsAsStitch": "No",
+      "relativeRowHeight": 0.9,
+      "fabricDensity": "Medium-dense",
+      "engineNotes": "Leaves the unused back loops visible"
+    },
+    {
+      "id": "half-double-crochet",
+      "name": "Half-double crochet",
+      "abbr": "hdc",
+      "baseStitchMultiple": 1,
+      "extraFoundationChains": 2,
+      "turningChain": [
+        1,
+        2
+      ],
+      "turningChainCountsAsStitch": "Usually no",
+      "relativeRowHeight": 1.5,
+      "fabricDensity": "Medium",
+      "engineNotes": "First stitch may be worked in the second or third chain depending on construction"
+    },
+    {
+      "id": "third-loop-hdc",
+      "name": "Third-loop half-double crochet",
+      "abbr": "third-loop hdc",
+      "baseStitchMultiple": 1,
+      "extraFoundationChains": 2,
+      "turningChain": [
+        1,
+        2
+      ],
+      "turningChainCountsAsStitch": "No",
+      "relativeRowHeight": 1.35,
+      "fabricDensity": "Medium",
+      "engineNotes": "Creates horizontal knit-like ridges"
+    },
+    {
+      "id": "extended-half-double-crochet",
+      "name": "Extended half-double crochet",
+      "abbr": "ehdc",
+      "baseStitchMultiple": 1,
+      "extraFoundationChains": 2,
+      "turningChain": 2,
+      "turningChainCountsAsStitch": "Usually no",
+      "relativeRowHeight": 1.75,
+      "fabricDensity": "Medium",
+      "engineNotes": "Taller and more flexible than standard half-double crochet"
+    },
+    {
+      "id": "double-crochet",
+      "name": "Double crochet",
+      "abbr": "dc",
+      "baseStitchMultiple": 1,
+      "extraFoundationChains": 3,
+      "turningChain": [
+        2,
+        3
+      ],
+      "turningChainCountsAsStitch": "Pattern-dependent",
+      "relativeRowHeight": 2,
+      "fabricDensity": "Medium-open",
+      "engineNotes": "First stitch is commonly worked in the third or fourth chain"
+    },
+    {
+      "id": "linked-double-crochet",
+      "name": "Linked double crochet",
+      "abbr": "ldc",
+      "baseStitchMultiple": 1,
+      "extraFoundationChains": 3,
+      "turningChain": [
+        2,
+        3
+      ],
+      "turningChainCountsAsStitch": "Pattern-dependent",
+      "relativeRowHeight": 1.9,
+      "fabricDensity": "Medium-dense",
+      "engineNotes": "Links stitches horizontally to reduce gaps"
+    },
+    {
+      "id": "extended-double-crochet",
+      "name": "Extended double crochet",
+      "abbr": "edc",
+      "baseStitchMultiple": 1,
+      "extraFoundationChains": 3,
+      "turningChain": 3,
+      "turningChainCountsAsStitch": "Usually yes",
+      "relativeRowHeight": 2.25,
+      "fabricDensity": "Medium-open",
+      "engineNotes": "Taller than double crochet but shorter than treble crochet"
+    },
+    {
+      "id": "treble-crochet",
+      "name": "Treble crochet",
+      "abbr": "tr",
+      "baseStitchMultiple": 1,
+      "extraFoundationChains": 4,
+      "turningChain": [
+        3,
+        4
+      ],
+      "turningChainCountsAsStitch": "Usually yes",
+      "relativeRowHeight": 3,
+      "fabricDensity": "Open",
+      "engineNotes": "Yarn over twice before inserting the hook"
+    },
+    {
+      "id": "double-treble-crochet",
+      "name": "Double treble crochet",
+      "abbr": "dtr",
+      "baseStitchMultiple": 1,
+      "extraFoundationChains": 5,
+      "turningChain": [
+        4,
+        5
+      ],
+      "turningChainCountsAsStitch": "Usually yes",
+      "relativeRowHeight": 4,
+      "fabricDensity": "Very open",
+      "engineNotes": "Yarn over three times before inserting the hook"
+    },
+    {
+      "id": "triple-treble-crochet",
+      "name": "Triple treble crochet",
+      "abbr": "trtr",
+      "baseStitchMultiple": 1,
+      "extraFoundationChains": 6,
+      "turningChain": [
+        5,
+        6
+      ],
+      "turningChainCountsAsStitch": "Usually yes",
+      "relativeRowHeight": 5,
+      "fabricDensity": "Very open",
+      "engineNotes": "Yarn over four times before inserting the hook"
+    },
+    {
+      "id": "foundation-single-crochet",
+      "name": "Foundation single crochet",
+      "abbr": "fsc",
+      "baseStitchMultiple": 1,
+      "extraFoundationChains": 0,
+      "turningChain": 1,
+      "turningChainCountsAsStitch": "No",
+      "relativeRowHeight": 1,
+      "fabricDensity": "Dense",
+      "engineNotes": "Creates the foundation chain and first row together"
+    },
+    {
+      "id": "foundation-half-double-crochet",
+      "name": "Foundation half-double crochet",
+      "abbr": "fhdc",
+      "baseStitchMultiple": 1,
+      "extraFoundationChains": 0,
+      "turningChain": [
+        1,
+        2
+      ],
+      "turningChainCountsAsStitch": "No",
+      "relativeRowHeight": 1.5,
+      "fabricDensity": "Medium",
+      "engineNotes": "Replaces the foundation chain and first half-double-crochet row"
+    },
+    {
+      "id": "foundation-double-crochet",
+      "name": "Foundation double crochet",
+      "abbr": "fdc",
+      "baseStitchMultiple": 1,
+      "extraFoundationChains": 0,
+      "turningChain": [
+        2,
+        3
+      ],
+      "turningChainCountsAsStitch": "Pattern-dependent",
+      "relativeRowHeight": 2,
+      "fabricDensity": "Medium-open",
+      "engineNotes": "Replaces the foundation chain and first double-crochet row"
+    },
+    {
+      "id": "moss-stitch",
+      "name": "Moss stitch or linen stitch",
+      "abbr": "moss or linen",
+      "baseStitchMultiple": 2,
+      "extraFoundationChains": [
+        1,
+        2
+      ],
+      "turningChain": [
+        1,
+        2
+      ],
+      "turningChainCountsAsStitch": "No",
+      "relativeRowHeight": 1,
+      "fabricDensity": "Medium",
+      "engineNotes": "Usually alternates single crochet and chain one; exact starting multiple varies"
+    },
+    {
+      "id": "lemon-peel-stitch",
+      "name": "Lemon peel stitch",
+      "abbr": "None standard",
+      "baseStitchMultiple": 2,
+      "extraFoundationChains": 1,
+      "turningChain": 1,
+      "turningChainCountsAsStitch": "No",
+      "relativeRowHeight": 1.4,
+      "fabricDensity": "Medium",
+      "engineNotes": "Alternates single crochet and double crochet"
+    },
+    {
+      "id": "suzette-stitch",
+      "name": "Suzette stitch",
+      "abbr": "None standard",
+      "baseStitchMultiple": 2,
+      "extraFoundationChains": 1,
+      "turningChain": 1,
+      "turningChainCountsAsStitch": "No",
+      "relativeRowHeight": 1.5,
+      "fabricDensity": "Dense-textured",
+      "engineNotes": "Usually work one single crochet and one double crochet in the same stitch, then skip the next stitch"
+    },
+    {
+      "id": "seed-stitch",
+      "name": "Crochet seed stitch",
+      "abbr": "seed",
+      "baseStitchMultiple": 2,
+      "extraFoundationChains": 1,
+      "turningChain": 1,
+      "turningChainCountsAsStitch": "No",
+      "relativeRowHeight": 1.25,
+      "fabricDensity": "Medium",
+      "engineNotes": "Commonly alternates single crochet and double crochet; terminology varies"
+    },
+    {
+      "id": "crunch-stitch",
+      "name": "Crunch stitch",
+      "abbr": "None standard",
+      "baseStitchMultiple": 2,
+      "extraFoundationChains": 1,
+      "turningChain": 1,
+      "turningChainCountsAsStitch": "No",
+      "relativeRowHeight": 0.9,
+      "fabricDensity": "Dense-textured",
+      "engineNotes": "Usually alternates slip stitch and half-double crochet"
+    },
+    {
+      "id": "spider-stitch",
+      "name": "Spider stitch",
+      "abbr": "None standard",
+      "baseStitchMultiple": 2,
+      "extraFoundationChains": 1,
+      "turningChain": 1,
+      "turningChainCountsAsStitch": "No",
+      "relativeRowHeight": 1,
+      "fabricDensity": "Dense-textured",
+      "engineNotes": "Commonly works single crochet, chain one, single crochet into the same stitch"
+    },
+    {
+      "id": "v-stitch-dc",
+      "name": "Double crochet V-stitch",
+      "abbr": "dc V-st",
+      "baseStitchMultiple": [
+        2,
+        3
+      ],
+      "extraFoundationChains": [
+        1,
+        3
+      ],
+      "turningChain": 3,
+      "turningChainCountsAsStitch": "Usually yes",
+      "relativeRowHeight": 2,
+      "fabricDensity": "Open",
+      "engineNotes": "Usually double crochet, chain one, double crochet in the same stitch; exact repeat varies"
+    },
+    {
+      "id": "crossed-double-crochet",
+      "name": "Crossed double crochet",
+      "abbr": "crossed dc",
+      "baseStitchMultiple": 2,
+      "extraFoundationChains": [
+        2,
+        3
+      ],
+      "turningChain": [
+        2,
+        3
+      ],
+      "turningChainCountsAsStitch": "Pattern-dependent",
+      "relativeRowHeight": 2,
+      "fabricDensity": "Medium-open",
+      "engineNotes": "Skip one stitch, work the next stitch, then cross back into the skipped stitch"
+    },
+    {
+      "id": "shell-5dc",
+      "name": "Five-double-crochet shell",
+      "abbr": "5-dc shell",
+      "baseStitchMultiple": 6,
+      "extraFoundationChains": 1,
+      "turningChain": [
+        1,
+        3
+      ],
+      "turningChainCountsAsStitch": "Pattern-dependent",
+      "relativeRowHeight": 2,
+      "fabricDensity": "Medium-open",
+      "engineNotes": "Common repeat uses five double crochets with skipped stitches and anchor stitches"
+    },
+    {
+      "id": "shell-3dc",
+      "name": "Three-double-crochet shell",
+      "abbr": "3-dc shell",
+      "baseStitchMultiple": 4,
+      "extraFoundationChains": 1,
+      "turningChain": [
+        1,
+        3
+      ],
+      "turningChainCountsAsStitch": "Pattern-dependent",
+      "relativeRowHeight": 2,
+      "fabricDensity": "Medium-open",
+      "engineNotes": "Exact repeat depends on spacing and anchor stitch"
+    },
+    {
+      "id": "cluster-2dc",
+      "name": "Two-double-crochet cluster",
+      "abbr": "2-dc-cl",
+      "baseStitchMultiple": 1,
+      "extraFoundationChains": [
+        2,
+        3
+      ],
+      "turningChain": [
+        2,
+        3
+      ],
+      "turningChainCountsAsStitch": "Pattern-dependent",
+      "relativeRowHeight": 1.75,
+      "fabricDensity": "Medium",
+      "engineNotes": "Two partially completed double crochets joined at the top"
+    },
+    {
+      "id": "cluster-3dc",
+      "name": "Three-double-crochet cluster",
+      "abbr": "3-dc-cl",
+      "baseStitchMultiple": 1,
+      "extraFoundationChains": [
+        2,
+        3
+      ],
+      "turningChain": [
+        2,
+        3
+      ],
+      "turningChainCountsAsStitch": "Pattern-dependent",
+      "relativeRowHeight": 1.75,
+      "fabricDensity": "Medium-dense",
+      "engineNotes": "Three partially completed double crochets joined at the top"
+    },
+    {
+      "id": "puff-stitch",
+      "name": "Puff stitch",
+      "abbr": "puff",
+      "baseStitchMultiple": [
+        1,
+        2
+      ],
+      "extraFoundationChains": "Variable",
+      "turningChain": [
+        1,
+        2
+      ],
+      "turningChainCountsAsStitch": "No",
+      "relativeRowHeight": 1.5,
+      "fabricDensity": "Dense-textured",
+      "engineNotes": "Number of yarn overs and closure method must be specified"
+    },
+    {
+      "id": "bobble-stitch",
+      "name": "Bobble stitch",
+      "abbr": "bobble",
+      "baseStitchMultiple": [
+        1,
+        2
+      ],
+      "extraFoundationChains": "Variable",
+      "turningChain": 1,
+      "turningChainCountsAsStitch": "No",
+      "relativeRowHeight": 1.25,
+      "fabricDensity": "Dense-textured",
+      "engineNotes": "Usually made from four to six partial double crochets joined at the top"
+    },
+    {
+      "id": "popcorn-stitch",
+      "name": "Popcorn stitch",
+      "abbr": "pc",
+      "baseStitchMultiple": [
+        1,
+        2
+      ],
+      "extraFoundationChains": "Variable",
+      "turningChain": [
+        1,
+        3
+      ],
+      "turningChainCountsAsStitch": "Pattern-dependent",
+      "relativeRowHeight": 1.5,
+      "fabricDensity": "Dense-textured",
+      "engineNotes": "Completed stitches are joined after removing and reinserting the hook"
+    },
+    {
+      "id": "front-post-double-crochet",
+      "name": "Front post double crochet",
+      "abbr": "FPdc",
+      "baseStitchMultiple": 1,
+      "extraFoundationChains": [
+        0,
+        3
+      ],
+      "turningChain": [
+        2,
+        3
+      ],
+      "turningChainCountsAsStitch": "Pattern-dependent",
+      "relativeRowHeight": 2,
+      "fabricDensity": "Dense-textured",
+      "engineNotes": "Worked around the stitch post from the front"
+    },
+    {
+      "id": "back-post-double-crochet",
+      "name": "Back post double crochet",
+      "abbr": "BPdc",
+      "baseStitchMultiple": 1,
+      "extraFoundationChains": [
+        0,
+        3
+      ],
+      "turningChain": [
+        2,
+        3
+      ],
+      "turningChainCountsAsStitch": "Pattern-dependent",
+      "relativeRowHeight": 2,
+      "fabricDensity": "Dense-textured",
+      "engineNotes": "Worked around the stitch post from the back"
+    },
+    {
+      "id": "crab-stitch",
+      "name": "Reverse single crochet or crab stitch",
+      "abbr": "rev sc or crab",
+      "baseStitchMultiple": 1,
+      "extraFoundationChains": 0,
+      "turningChain": [
+        0,
+        1
+      ],
+      "turningChainCountsAsStitch": "No",
+      "relativeRowHeight": 0.75,
+      "fabricDensity": "Dense",
+      "engineNotes": "Worked backward and generally used as edging"
+    },
+    {
+      "id": "corner-to-corner-block",
+      "name": "Corner-to-corner block",
+      "abbr": "C2C block",
+      "baseStitchMultiple": "1 block",
+      "extraFoundationChains": 6,
+      "turningChain": 3,
+      "turningChainCountsAsStitch": "Yes",
+      "relativeRowHeight": "Block-based",
+      "fabricDensity": "Medium-open",
+      "engineNotes": "Calculate using blocks rather than individual stitches"
+    },
+    {
+      "id": "granny-cluster",
+      "name": "Granny cluster",
+      "abbr": "3-dc cluster",
+      "baseStitchMultiple": "1 cluster",
+      "extraFoundationChains": "Variable",
+      "turningChain": 3,
+      "turningChainCountsAsStitch": "Usually yes",
+      "relativeRowHeight": "Block-based",
+      "fabricDensity": "Medium-open",
+      "engineNotes": "Usually three double crochets worked in one chain space"
+    }
+  ]
+}

@@ -10,6 +10,10 @@ This first slice includes:
 - Static HTML/CSS that can be deployed directly to Vercel
 - A starter crochet stitch data library at `data/crochet-stitches.json`
 - A rules-based, non-AI Preview Builder for estimating crochet output from user specs
+- PDF-derived engine tables for stitch behavior, yarn weights, and gauge matrix estimates:
+  - `data/stitch-engine-profiles.json`
+  - `data/yarn-weights.json`
+  - `data/stitch-gauge-matrix.json`
 
 ## Local Preview
 

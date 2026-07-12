@@ -1,0 +1,149 @@
+{
+  "schemaVersion": "0.1.0",
+  "source": "Yarn_Stitch_Data_Table.pdf",
+  "weights": [
+    {
+      "id": "lace",
+      "number": 0,
+      "name": "Lace",
+      "commonExamples": [
+        "thread",
+        "cobweb",
+        "very fine lace yarn",
+        "light fingering"
+      ],
+      "generalHookRangeMm": [
+        1.5,
+        3.5
+      ],
+      "recommendedHookMm": 2.25,
+      "scStitchesPer4In": 26,
+      "rowFactor": 0.62
+    },
+    {
+      "id": "superFine",
+      "number": 1,
+      "name": "Super fine",
+      "commonExamples": [
+        "sock",
+        "fingering",
+        "baby-fine",
+        "light fingering"
+      ],
+      "generalHookRangeMm": [
+        2.25,
+        3.5
+      ],
+      "recommendedHookMm": 3.0,
+      "scStitchesPer4In": 22,
+      "rowFactor": 0.64
+    },
+    {
+      "id": "fine",
+      "number": 2,
+      "name": "Fine",
+      "commonExamples": [
+        "sport",
+        "baby",
+        "heavy fingering"
+      ],
+      "generalHookRangeMm": [
+        3.25,
+        4.5
+      ],
+      "recommendedHookMm": 3.75,
+      "scStitchesPer4In": 19,
+      "rowFactor": 0.66
+    },
+    {
+      "id": "light",
+      "number": 3,
+      "name": "Light",
+      "commonExamples": [
+        "DK",
+        "light worsted",
+        "light baby"
+      ],
+      "generalHookRangeMm": [
+        4.0,
+        5.0
+      ],
+      "recommendedHookMm": 4.5,
+      "scStitchesPer4In": 17,
+      "rowFactor": 0.68
+    },
+    {
+      "id": "medium",
+      "number": 4,
+      "name": "Medium",
+      "commonExamples": [
+        "worsted",
+        "aran",
+        "afghan",
+        "medium-weight"
+      ],
+      "generalHookRangeMm": [
+        5.0,
+        6.0
+      ],
+      "recommendedHookMm": 5.5,
+      "scStitchesPer4In": 15,
+      "rowFactor": 0.7
+    },
+    {
+      "id": "bulky",
+      "number": 5,
+      "name": "Bulky",
+      "commonExamples": [
+        "bulky",
+        "chunky",
+        "craft",
+        "rug"
+      ],
+      "generalHookRangeMm": [
+        6.5,
+        9.0
+      ],
+      "recommendedHookMm": 7.5,
+      "scStitchesPer4In": 11,
+      "rowFactor": 0.72
+    },
+    {
+      "id": "superBulky",
+      "number": 6,
+      "name": "Super bulky",
+      "commonExamples": [
+        "super bulky",
+        "super chunky",
+        "roving",
+        "thick-and-quick"
+      ],
+      "generalHookRangeMm": [
+        9.0,
+        15.0
+      ],
+      "recommendedHookMm": 12.0,
+      "scStitchesPer4In": 7.5,
+      "rowFactor": 0.74
+    },
+    {
+      "id": "jumbo",
+      "number": 7,
+      "name": "Jumbo",
+      "commonExamples": [
+        "jumbo",
+        "giant",
+        "arm-knit",
+        "tube",
+        "extreme chunky"
+      ],
+      "generalHookRangeMm": [
+        15.0,
+        30.0
+      ],
+      "recommendedHookMm": 20.0,
+      "scStitchesPer4In": 4.5,
+      "rowFactor": 0.76
+    }
+  ]
+}

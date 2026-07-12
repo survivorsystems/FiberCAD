@@ -146,6 +146,21 @@ const vibePalettes = {
   darkAcademic: ["#1c1817", "#4c2e24", "#6b4f36", "#83744f", "#b8aa8a"],
 };
 
+const stitchTypeToEngineId = {
+  sc: "single-crochet",
+  hdc: "half-double-crochet",
+  dc: "double-crochet",
+  tr: "treble-crochet",
+  vst: "v-stitch-dc",
+  shell: "shell-5dc",
+  granny: "granny-cluster",
+  tss: "tunisian-simple-stitch",
+};
+
+let engineYarnWeights = [];
+let engineGaugeEntries = [];
+let engineStitchProfiles = [];
+
 const form = document.querySelector("[data-preview-form]");
 const previewNode = document.querySelector("[data-fabric-preview]");
 const captionNode = document.querySelector("[data-preview-caption]");
@@ -158,6 +173,60 @@ function clampNumber(value, min, max) {
 
 function roundOne(value) {
   return Math.round(value * 10) / 10;
+}
+
+function averageRange(value) {
+  if (Array.isArray(value)) {
+    return (Number(value[0]) + Number(value[1])) / 2;
+  }
+  return Number(value);
+}
+
+function getEngineStitchId(stitchType) {
+  return stitchTypeToEngineId[stitchType] || stitchType;
+}
+
+function getEngineYarnWeight(yarnWeightId) {
+  const imported = engineYarnWeights.find((weight) => weight.id === yarnWeightId);
+  const fallback = yarnWeights[yarnWeightId];
+  if (!imported) {
+    return fallback;
+  }
+  return {
+    ...fallback,
+    ...imported,
+    label: `${imported.number} ${imported.name}`,
+  };
+}
+
+function getEngineGauge(yarnWeightId, stitchType) {
+  const stitchId = getEngineStitchId(stitchType);
+  return engineGaugeEntries.find(
+    (entry) => entry.yarnWeightId === yarnWeightId && entry.stitchId === stitchId,
+  );
+}
+
+function getStitchProfile(stitchType) {
+  const fallback = stitchProfiles[stitchType];
+  const engineProfile = engineStitchProfiles.find(
+    (profile) => profile.id === getEngineStitchId(stitchType),
+  );
+
+  if (!engineProfile) {
+    return fallback;
+  }
+
+  const repeat =
+    typeof engineProfile.baseStitchMultiple === "number"
+      ? engineProfile.baseStitchMultiple
+      : fallback.repeat;
+
+  return {
+    ...fallback,
+    repeat,
+    engineProfile,
+    texture: `${engineProfile.fabricDensity.toLowerCase()} fabric; ${engineProfile.engineNotes}`,
+  };
 }
 
 function colorForRow(rowIndex, specs) {
@@ -194,8 +263,26 @@ function getSpecs() {
 }
 
 function estimateProject(specs) {
-  const yarn = yarnWeights[specs.yarnWeight];
-  const stitch = stitchProfiles[specs.stitchType];
+  const yarn = getEngineYarnWeight(specs.yarnWeight);
+  const stitch = getStitchProfile(specs.stitchType);
+  const gauge = getEngineGauge(specs.yarnWeight, specs.stitchType);
+
+  if (gauge) {
+    const hookScale = Math.sqrt(averageRange(gauge.hookMmRange) / specs.hookSize);
+    const stitchesPerInch = (averageRange(gauge.stitchesPer4InRange) / 4) * hookScale;
+    const rowsPerInch = (averageRange(gauge.rowsPer4InRange) / 4) * hookScale;
+    return {
+      yarn,
+      stitch,
+      gauge,
+      source: "PDF gauge matrix",
+      stitchesPerInch,
+      rowsPerInch,
+      widthIn: specs.stitches / stitchesPerInch,
+      heightIn: specs.rows / rowsPerInch,
+    };
+  }
+
   const hookScale = Math.sqrt(yarn.recommendedHookMm / specs.hookSize);
   const stitchesPerInch = (yarn.scStitchesPer4In / 4) * hookScale / stitch.widthFactor;
   const stitchWidthIn = 1 / stitchesPerInch;
@@ -206,6 +293,8 @@ function estimateProject(specs) {
   return {
     yarn,
     stitch,
+    gauge: null,
+    source: "fallback heuristic",
     stitchesPerInch,
     rowsPerInch: 1 / rowHeightIn,
     widthIn,
@@ -217,17 +306,18 @@ function buildWarnings(specs, estimate) {
   const warnings = [];
   const { stitch } = estimate;
   const project = projectTypes[specs.projectType] || projectTypes.custom;
+  const hookRange = estimate.gauge?.hookMmRange || estimate.yarn.generalHookRangeMm;
 
   if (stitch.repeat > 1 && specs.stitches % stitch.repeat !== 0) {
     const next = specs.stitches + (stitch.repeat - (specs.stitches % stitch.repeat));
     warnings.push(`${stitch.label} repeats usually land cleaner in multiples of ${stitch.repeat}; try ${next} stitches across.`);
   }
 
-  if (specs.hookSize < estimate.yarn.recommendedHookMm * 0.78) {
+  if (hookRange && specs.hookSize < hookRange[0]) {
     warnings.push("The selected hook is small for this yarn weight, so the fabric may be stiff or curl.");
   }
 
-  if (specs.hookSize > estimate.yarn.recommendedHookMm * 1.35) {
+  if (hookRange && specs.hookSize > hookRange[1]) {
     warnings.push("The selected hook is large for this yarn weight, so the fabric may be loose, drapey, or gappy.");
   }
 
@@ -386,6 +476,31 @@ function updatePreview() {
   updateWarnings(buildWarnings(specs, estimate));
 }
 
+async function loadEngineData() {
+  try {
+    const [yarnResponse, gaugeResponse, profileResponse] = await Promise.all([
+      fetch("data/yarn-weights.json"),
+      fetch("data/stitch-gauge-matrix.json"),
+      fetch("data/stitch-engine-profiles.json"),
+    ]);
+    if (!yarnResponse.ok || !gaugeResponse.ok || !profileResponse.ok) {
+      throw new Error("Engine data request failed.");
+    }
+    const [yarnData, gaugeData, profileData] = await Promise.all([
+      yarnResponse.json(),
+      gaugeResponse.json(),
+      profileResponse.json(),
+    ]);
+    engineYarnWeights = yarnData.weights || [];
+    engineGaugeEntries = gaugeData.entries || [];
+    engineStitchProfiles = profileData.profiles || [];
+  } catch {
+    engineYarnWeights = [];
+    engineGaugeEntries = [];
+    engineStitchProfiles = [];
+  }
+}
+
 if (form) {
   form.addEventListener("input", updatePreview);
   form.elements.projectType.addEventListener("change", () => {
@@ -401,4 +516,5 @@ if (form) {
     updatePreview();
   });
   updatePreview();
+  loadEngineData().then(updatePreview);
 }
