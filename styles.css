@@ -463,6 +463,12 @@ h1 {
   font-weight: 800;
 }
 
+.optional-label {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
 .builder-form select,
 .builder-form input {
   width: 100%;
@@ -477,6 +483,29 @@ h1 {
 
 .builder-form input[type="color"] {
   padding: 5px;
+}
+
+.builder-form input[type="file"] {
+  padding: 8px;
+  background: rgba(255, 250, 243, 0.72);
+}
+
+.palette-preview {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(58, 46, 40, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 250, 243, 0.56);
+}
+
+.palette-preview span {
+  display: block;
+  min-height: 28px;
+  border: 1px solid rgba(33, 27, 24, 0.18);
+  border-radius: 6px;
+  background: var(--swatch);
 }
 
 .builder-output {

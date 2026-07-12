@@ -23,13 +23,74 @@
         <p class="eyebrow">Rules-based simulator</p>
         <h1>Preview Builder</h1>
         <p>
-          Choose your yarn, hook, stitch, stitch count, and rows to generate a deterministic
-          crochet mockup before you commit hours to the real project.
+          Tell FiberCAD what you want to make, choose a vibe, then tune the yarn, hook, stitch,
+          count, and rows to generate a deterministic crochet mockup before you commit hours.
         </p>
       </section>
 
       <section class="workspace-panel preview-builder" aria-label="Preview Builder">
         <form class="builder-form" data-preview-form>
+          <fieldset>
+            <legend>Project</legend>
+            <label>
+              Whatcha makin?
+              <select name="projectType" data-preview-input>
+                <option value="blanket" selected>Blanket</option>
+                <option value="babyBlanket">Baby blanket</option>
+                <option value="throwBlanket">Throw blanket</option>
+                <option value="temperatureBlanket">Temperature blanket</option>
+                <option value="scarf">Scarf</option>
+                <option value="shawl">Shawl / wrap</option>
+                <option value="bag">Bag / tote</option>
+                <option value="placemat">Placemat</option>
+                <option value="dishcloth">Dishcloth / washcloth</option>
+                <option value="tapestry">Tapestry / wall hanging</option>
+                <option value="pillow">Pillow cover</option>
+                <option value="tableRunner">Table runner</option>
+                <option value="coaster">Coaster set</option>
+                <option value="grannySquare">Granny square / motif</option>
+                <option value="sweaterPanel">Sweater panel</option>
+                <option value="cardiganPanel">Cardigan panel</option>
+                <option value="hat">Hat / beanie</option>
+                <option value="cowl">Cowl</option>
+                <option value="amigurumi">Amigurumi</option>
+                <option value="marketBag">Market bag</option>
+                <option value="rug">Rug</option>
+                <option value="custom">Something custom</option>
+              </select>
+            </label>
+            <label>
+              What's the vibe? <span class="optional-label">Optional</span>
+              <select name="vibe" data-preview-input>
+                <option value="custom" selected>I'll choose colors myself</option>
+                <option value="boho">Boho</option>
+                <option value="hippie">Hippie</option>
+                <option value="vintage">Vintage</option>
+                <option value="country">Country</option>
+                <option value="tribal">Tribal-inspired</option>
+                <option value="goth">Goth</option>
+                <option value="cottagecore">Cottagecore</option>
+                <option value="coastal">Coastal</option>
+                <option value="forest">Forest</option>
+                <option value="desert">Desert</option>
+                <option value="prairie">Prairie</option>
+                <option value="retro70s">Retro 70s</option>
+                <option value="artDeco">Art deco</option>
+                <option value="maximalist">Maximalist</option>
+                <option value="minimalist">Minimalist</option>
+                <option value="pastel">Pastel</option>
+                <option value="jewelTone">Jewel tone</option>
+                <option value="earthy">Earthy</option>
+                <option value="witchy">Witchy</option>
+                <option value="rainbowMuted">Muted rainbow</option>
+                <option value="neon">Neon pop</option>
+                <option value="holiday">Holiday</option>
+                <option value="babySoft">Baby soft</option>
+                <option value="darkAcademic">Dark academic</option>
+              </select>
+            </label>
+          </fieldset>
+
           <fieldset>
             <legend>Tools</legend>
             <label>
@@ -97,8 +158,10 @@
                 <option value="twoRowStripe">Two-row stripes</option>
                 <option value="wideStripe">Wide stripes</option>
                 <option value="mutedRainbow" selected>Muted rainbow</option>
+                <option value="vibePalette">Use vibe palette</option>
               </select>
             </label>
+            <div class="palette-preview" data-palette-preview aria-label="Current color palette"></div>
             <label>
               Main color
               <input name="primaryColor" type="color" value="#9f5f5d" data-preview-input />
@@ -106,6 +169,10 @@
             <label>
               Accent color
               <input name="accentColor" type="color" value="#5f7f7a" data-preview-input />
+            </label>
+            <label>
+              Upload your own palette <span class="optional-label">Coming next</span>
+              <input name="paletteUpload" type="file" accept="image/*,.ase,.aco,.css,.txt" />
             </label>
           </fieldset>
         </form>

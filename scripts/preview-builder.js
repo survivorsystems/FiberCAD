@@ -9,6 +9,31 @@ const yarnWeights = {
   jumbo: { label: "7 Jumbo", scStitchesPer4In: 5, recommendedHookMm: 15, rowFactor: 0.76 },
 };
 
+const projectTypes = {
+  blanket: { label: "Blanket", defaultStitches: 120, defaultRows: 96, proportion: "balanced rectangle" },
+  babyBlanket: { label: "Baby blanket", defaultStitches: 90, defaultRows: 72, proportion: "soft small blanket" },
+  throwBlanket: { label: "Throw blanket", defaultStitches: 132, defaultRows: 104, proportion: "couch throw" },
+  temperatureBlanket: { label: "Temperature blanket", defaultStitches: 160, defaultRows: 365, proportion: "long daily-row blanket" },
+  scarf: { label: "Scarf", defaultStitches: 28, defaultRows: 168, proportion: "long narrow rectangle" },
+  shawl: { label: "Shawl / wrap", defaultStitches: 150, defaultRows: 64, proportion: "wide wrap" },
+  bag: { label: "Bag / tote", defaultStitches: 72, defaultRows: 52, proportion: "structured panel" },
+  placemat: { label: "Placemat", defaultStitches: 62, defaultRows: 34, proportion: "low rectangle" },
+  dishcloth: { label: "Dishcloth / washcloth", defaultStitches: 34, defaultRows: 32, proportion: "small square" },
+  tapestry: { label: "Tapestry / wall hanging", defaultStitches: 96, defaultRows: 96, proportion: "chart-friendly panel" },
+  pillow: { label: "Pillow cover", defaultStitches: 58, defaultRows: 46, proportion: "square-ish cover panel" },
+  tableRunner: { label: "Table runner", defaultStitches: 42, defaultRows: 138, proportion: "long table rectangle" },
+  coaster: { label: "Coaster set", defaultStitches: 18, defaultRows: 16, proportion: "small square" },
+  grannySquare: { label: "Granny square / motif", defaultStitches: 36, defaultRows: 36, proportion: "motif square" },
+  sweaterPanel: { label: "Sweater panel", defaultStitches: 74, defaultRows: 66, proportion: "garment panel" },
+  cardiganPanel: { label: "Cardigan panel", defaultStitches: 64, defaultRows: 78, proportion: "garment panel" },
+  hat: { label: "Hat / beanie", defaultStitches: 64, defaultRows: 28, proportion: "hat body panel" },
+  cowl: { label: "Cowl", defaultStitches: 76, defaultRows: 42, proportion: "neckwear loop panel" },
+  amigurumi: { label: "Amigurumi", defaultStitches: 36, defaultRows: 30, proportion: "small shaped fabric sample" },
+  marketBag: { label: "Market bag", defaultStitches: 84, defaultRows: 48, proportion: "mesh-friendly panel" },
+  rug: { label: "Rug", defaultStitches: 74, defaultRows: 42, proportion: "sturdy floor rectangle" },
+  custom: { label: "Custom project", defaultStitches: 96, defaultRows: 72, proportion: "custom rectangle" },
+};
+
 const stitchProfiles = {
   sc: {
     label: "single crochet",
@@ -93,11 +118,39 @@ const stitchProfiles = {
 };
 
 const mutedRainbow = ["#9f5f5d", "#b47557", "#c19a57", "#7f8f68", "#5f8a86", "#617992", "#8a7198"];
+const vibePalettes = {
+  custom: ["#9f5f5d", "#5f7f7a"],
+  boho: ["#9b5d46", "#c98f58", "#d8b16d", "#6f7d57", "#305f63"],
+  hippie: ["#a83f6f", "#e17a47", "#e2b84b", "#5f9f73", "#4f6fa9"],
+  vintage: ["#7d4f50", "#b0785b", "#d4b78f", "#7f8d6a", "#526b73"],
+  country: ["#7e3f35", "#c9a66b", "#f0dfbd", "#4f6b4c", "#384d64"],
+  tribal: ["#302420", "#9b3f2f", "#d08838", "#d7c294", "#1f5f66"],
+  goth: ["#151217", "#3b263a", "#611f36", "#8a8d8f", "#d8d0c8"],
+  cottagecore: ["#b56d72", "#e5bd9b", "#d9d5a7", "#8aa078", "#6f7f63"],
+  coastal: ["#e8dfcf", "#9fbfbd", "#5f8ea0", "#2f6375", "#d3ad7f"],
+  forest: ["#243829", "#49613f", "#73865f", "#b49a60", "#6b4d35"],
+  desert: ["#b66f43", "#d7a66f", "#e6cfaa", "#8c7c55", "#5d6f73"],
+  prairie: ["#b98264", "#d8b287", "#efe0bd", "#96a36f", "#6f7a89"],
+  retro70s: ["#7f3f2f", "#c26b35", "#d7a441", "#6f7a41", "#3f6670"],
+  artDeco: ["#17191d", "#2d5d73", "#d5a84f", "#efe6d1", "#7f3f46"],
+  maximalist: ["#d83f87", "#f28a31", "#f4d34f", "#288f80", "#513b9f"],
+  minimalist: ["#1f1d1a", "#ebe2d4", "#c7b8a3", "#82796f", "#f7f1e8"],
+  pastel: ["#e9a7b6", "#f4cba5", "#f4e6a7", "#a9d2bc", "#aabddd"],
+  jewelTone: ["#742652", "#1f6f67", "#1f4f7a", "#58327f", "#b58a2b"],
+  earthy: ["#5f3f2f", "#8f6747", "#b99763", "#657a4f", "#3f6056"],
+  witchy: ["#151318", "#36213e", "#6f2d56", "#566b43", "#c6a15b"],
+  rainbowMuted: mutedRainbow,
+  neon: ["#111111", "#ff4fc3", "#9eff38", "#36d8ff", "#ffd93d"],
+  holiday: ["#8f1d2c", "#1f6b4b", "#f2dfb0", "#c59a42", "#f7f4ea"],
+  babySoft: ["#e8b8c5", "#f1d5a8", "#d7e4b2", "#add7d7", "#b7c3e3"],
+  darkAcademic: ["#1c1817", "#4c2e24", "#6b4f36", "#83744f", "#b8aa8a"],
+};
 
 const form = document.querySelector("[data-preview-form]");
 const previewNode = document.querySelector("[data-fabric-preview]");
 const captionNode = document.querySelector("[data-preview-caption]");
 const warningList = document.querySelector("[data-warning-list]");
+const palettePreview = document.querySelector("[data-palette-preview]");
 
 function clampNumber(value, min, max) {
   return Math.min(Math.max(Number(value), min), max);
@@ -108,6 +161,7 @@ function roundOne(value) {
 }
 
 function colorForRow(rowIndex, specs) {
+  const vibePalette = vibePalettes[specs.vibe] || vibePalettes.custom;
   if (specs.colorMode === "solid") {
     return specs.primaryColor;
   }
@@ -117,12 +171,17 @@ function colorForRow(rowIndex, specs) {
   if (specs.colorMode === "wideStripe") {
     return Math.floor(rowIndex / 8) % 2 === 0 ? specs.primaryColor : specs.accentColor;
   }
+  if (specs.colorMode === "vibePalette") {
+    return vibePalette[rowIndex % vibePalette.length];
+  }
   return mutedRainbow[Math.floor((rowIndex / Math.max(specs.rows - 1, 1)) * mutedRainbow.length) % mutedRainbow.length];
 }
 
 function getSpecs() {
   const formData = new FormData(form);
   return {
+    projectType: formData.get("projectType"),
+    vibe: formData.get("vibe"),
     yarnWeight: formData.get("yarnWeight"),
     hookSize: Number(formData.get("hookSize")),
     stitchType: formData.get("stitchType"),
@@ -157,6 +216,7 @@ function estimateProject(specs) {
 function buildWarnings(specs, estimate) {
   const warnings = [];
   const { stitch } = estimate;
+  const project = projectTypes[specs.projectType] || projectTypes.custom;
 
   if (stitch.repeat > 1 && specs.stitches % stitch.repeat !== 0) {
     const next = specs.stitches + (stitch.repeat - (specs.stitches % stitch.repeat));
@@ -183,11 +243,45 @@ function buildWarnings(specs, estimate) {
     warnings.push("Turning chains may or may not count as the first stitch depending on the pattern convention.");
   }
 
+  if (specs.projectType === "temperatureBlanket" && specs.rows < 365) {
+    warnings.push("Temperature blankets often use one row per day, so 365 rows is the usual planning baseline.");
+  }
+
+  if ((specs.projectType === "bag" || specs.projectType === "marketBag") && stitch.openness > 0.4) {
+    warnings.push("Open stitches can stretch on bags; consider a denser stitch or lining if it needs to carry weight.");
+  }
+
+  if (specs.projectType === "amigurumi" && stitch.abbr !== "sc") {
+    warnings.push("Most amigurumi uses tight single crochet for structure; taller stitches may show stuffing or lose shape.");
+  }
+
+  if (specs.projectType === "tapestry" && stitch.abbr !== "sc" && stitch.abbr !== "tss") {
+    warnings.push("Tapestry-style colorwork usually reads cleanest in single crochet or Tunisian simple stitch.");
+  }
+
   if (warnings.length === 0) {
-    warnings.push("No obvious stitch-count or proportion issues from these specs.");
+    warnings.push(`No obvious stitch-count or proportion issues for this ${project.label.toLowerCase()} preview.`);
   }
 
   return warnings;
+}
+
+function renderPalette(specs) {
+  if (!palettePreview) {
+    return;
+  }
+  const colors =
+    specs.colorMode === "solid"
+      ? [specs.primaryColor]
+      : specs.colorMode === "twoRowStripe" || specs.colorMode === "wideStripe"
+        ? [specs.primaryColor, specs.accentColor]
+        : specs.colorMode === "vibePalette"
+          ? vibePalettes[specs.vibe] || vibePalettes.custom
+          : mutedRainbow;
+
+  palettePreview.innerHTML = colors
+    .map((color) => `<span style="--swatch:${color}" title="${color}"></span>`)
+    .join("");
 }
 
 function renderSymbol(x, y, width, height, stitch, rowColor, colIndex) {
@@ -270,11 +364,13 @@ function renderPreview(specs, estimate) {
 }
 
 function updateStats(specs, estimate) {
+  const project = projectTypes[specs.projectType] || projectTypes.custom;
+  const vibeName = form.elements.vibe.options[form.elements.vibe.selectedIndex].text;
   document.querySelector("[data-stat-size]").textContent = `${roundOne(estimate.widthIn)} in x ${roundOne(estimate.heightIn)} in`;
   document.querySelector("[data-stat-gauge]").textContent = `${roundOne(estimate.stitchesPerInch)} sts/in, ${roundOne(estimate.rowsPerInch)} rows/in`;
-  document.querySelector("[data-stat-plan]").textContent = `${specs.stitches} ${estimate.stitch.abbr} across x ${specs.rows} rows`;
-  document.querySelector("[data-stat-texture]").textContent = estimate.stitch.texture;
-  captionNode.textContent = `${estimate.yarn.label}, ${specs.hookSize} mm hook, ${estimate.stitch.label}.`;
+  document.querySelector("[data-stat-plan]").textContent = `${project.label}: ${specs.stitches} ${estimate.stitch.abbr} across x ${specs.rows} rows`;
+  document.querySelector("[data-stat-texture]").textContent = `${estimate.stitch.texture}; ${project.proportion}.`;
+  captionNode.textContent = `${project.label}, ${vibeName}, ${estimate.yarn.label}, ${specs.hookSize} mm hook, ${estimate.stitch.label}.`;
 }
 
 function updateWarnings(warnings) {
@@ -285,11 +381,24 @@ function updatePreview() {
   const specs = getSpecs();
   const estimate = estimateProject(specs);
   previewNode.innerHTML = renderPreview(specs, estimate);
+  renderPalette(specs);
   updateStats(specs, estimate);
   updateWarnings(buildWarnings(specs, estimate));
 }
 
 if (form) {
   form.addEventListener("input", updatePreview);
+  form.elements.projectType.addEventListener("change", () => {
+    const project = projectTypes[form.elements.projectType.value] || projectTypes.custom;
+    form.elements.stitchCount.value = project.defaultStitches;
+    form.elements.rowCount.value = project.defaultRows;
+    updatePreview();
+  });
+  form.elements.vibe.addEventListener("change", () => {
+    if (form.elements.vibe.value !== "custom") {
+      form.elements.colorMode.value = "vibePalette";
+    }
+    updatePreview();
+  });
   updatePreview();
 }
