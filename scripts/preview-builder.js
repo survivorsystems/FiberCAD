@@ -186,7 +186,7 @@ function getSpecs() {
     hookSize: Number(formData.get("hookSize")),
     stitchType: formData.get("stitchType"),
     stitches: clampNumber(formData.get("stitchCount"), 4, 360),
-    rows: clampNumber(formData.get("rowCount"), 2, 240),
+    rows: clampNumber(formData.get("rowCount"), 2, 365),
     colorMode: formData.get("colorMode"),
     primaryColor: formData.get("primaryColor"),
     accentColor: formData.get("accentColor"),
