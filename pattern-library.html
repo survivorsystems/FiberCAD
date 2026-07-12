@@ -20,11 +20,46 @@
 
     <main class="page-main">
       <section class="page-title">
-        <p class="eyebrow">Saved designs</p>
-        <h1>Pattern library</h1>
+        <p class="eyebrow">Data library</p>
+        <h1>Crochet stitch library</h1>
         <p>
-          This area will hold starter patterns, saved drafts, symbol charts, and reusable crochet
-          motifs for future designs.
+          A working stitch table for FiberCAD's chart builder, written pattern generator, symbol
+          legend, and finished-project simulator.
+        </p>
+      </section>
+
+      <section class="workspace-panel" aria-label="Pattern library preview">
+        <div class="table-heading">
+          <div>
+            <h2>Common crochet stitches and pattern terms</h2>
+            <p>
+              US terminology is the default. UK equivalents and common aliases are included where
+              they are useful for reading patterns.
+            </p>
+          </div>
+          <span data-stitch-count>Loading entries</span>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Abbr.</th>
+                <th>Name and aliases</th>
+                <th>Type</th>
+                <th>UK equivalent</th>
+                <th>Chart symbol</th>
+                <th>Project vernacular</th>
+              </tr>
+            </thead>
+            <tbody data-stitch-table-body>
+              <tr>
+                <td colspan="6">Loading crochet stitch library...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="source-note">
+          Sources: <span data-stitch-sources></span>
         </p>
       </section>
 
@@ -48,5 +83,6 @@
         </div>
       </section>
     </main>
+    <script src="scripts/library.js"></script>
   </body>
 </html>

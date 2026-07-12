@@ -8,6 +8,7 @@ This first slice includes:
 - Navigation for creating a pattern
 - Navigation for a pattern library
 - Static HTML/CSS that can be deployed directly to Vercel
+- A starter crochet stitch data library at `data/crochet-stitches.json`
 
 ## Local Preview
 
