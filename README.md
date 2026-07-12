@@ -1,6 +1,6 @@
-# Looploom
+# FiberCAD
 
-Looploom is an early MVP for a crochet pattern simulator and chart builder.
+FiberCAD is an early MVP for a crochet pattern simulator and chart builder.
 
 This first slice includes:
 
