@@ -11,6 +11,7 @@ import {
   applyCrochetTechniqueToProject,
   applyCrochetTechniqueToRowInput,
   calculateRowStitchMath,
+  canvasTokenEditPolicy,
   createDefaultShapingOperation,
   createStitchOperation,
   applyStitchOperationToCount,
@@ -18,6 +19,7 @@ import {
   chartSymbolForTechnique,
   convertConsecutiveIdenticalRowsToRepeatedSections,
   crochetTechniqueGroups,
+  createFreestyleProject,
   createGrannySquareObject,
   createRectanglePanelObject,
   createCrochetRow,
@@ -29,6 +31,7 @@ import {
   duplicateCrochetObject,
   estimateGrannySquareSize,
   estimateStitchCountForWidth,
+  expandRowToPatternStitchTokens,
   behaviorForTechnique,
   findCrochetTechnique,
   generatePatternInstructions,
@@ -198,6 +201,60 @@ test("generated instructions include increase and decrease operation math", () =
   assert.match(instructions[0].text, /Work 2 sc in the next stitch/);
   assert.match(instructions[0].text, /1 consumed, 2 produced/);
   assert.match(instructions[0].text, /13 sts/);
+});
+
+test("canvas stitch symbols are backed by pattern stitch tokens", () => {
+  const createId = createIdFactory();
+  const increasedInput = applyCrochetTechniqueToRowInput(
+    {
+      stitchId: "single-crochet",
+      widthInputMode: "stitch-count",
+      stitchCount: 12,
+      repeatCount: 1,
+      colorId: "color-cream",
+      position: 1,
+    },
+    "tech-increase",
+  );
+  const row = createCrochetRow(increasedInput, defaultYarnSetup, createId);
+  const tokens = expandRowToPatternStitchTokens(row);
+
+  assert.equal(tokens.length, row.stitchCount);
+  assert.equal(tokens.every((token) => token.rowId === row.id), true);
+  assert.equal(tokens.filter((token) => token.kind === "increase-child").length, 2);
+  assert.equal(tokens.filter((token) => token.operationId === row.stitchOperations?.[0].id).length, 2);
+});
+
+test("SVG workspace rows expose one pattern token per visible stitch", () => {
+  const createId = createIdFactory();
+  let draft = createFreestyleProject();
+  const input = applyCrochetTechniqueToRowInput(
+    {
+      stitchId: "single-crochet",
+      widthInputMode: "stitch-count",
+      stitchCount: 12,
+      repeatCount: 1,
+      colorId: "color-cream",
+      position: 1,
+    },
+    "tech-decrease",
+  );
+  const row = createCrochetRow(input, draft.yarnSetup, createId);
+  draft = addCrochetRowToObject(draft, "object-main-panel", row);
+  const modelRow = createSvgWorkspaceModel(draft).rows[0];
+
+  assert.equal(modelRow.stitchTokens.length, modelRow.stitchCount);
+  assert.equal(modelRow.stitchTokens.length, row.stitchCount);
+  assert.equal(modelRow.stitchTokens.filter((token) => token.kind === "decrease-result").length, 1);
+});
+
+test("single-token canvas edits require breaking repeated rows first", () => {
+  assert.deepEqual(canvasTokenEditPolicy({ repeatCount: 1 }), { canEditSingleToken: true });
+
+  const policy = canvasTokenEditPolicy({ repeatCount: 6 });
+  assert.equal(policy.canEditSingleToken, false);
+  assert.equal(policy.reason, "repeated-row-break-required");
+  assert.match(policy.message ?? "", /break the repeat into explicit rows/);
 });
 
 test("calculates row stitch math and plain-language shaping warnings", () => {

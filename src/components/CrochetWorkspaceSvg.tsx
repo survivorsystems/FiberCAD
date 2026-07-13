@@ -14,64 +14,73 @@ type CrochetWorkspaceSvgProps = {
 };
 
 function stitchMarks(row: SvgRowRenderModel) {
-  const visibleCount = Math.min(row.stitchCount, 72);
+  const visibleTokens = row.stitchTokens.slice(0, 72);
+  const visibleCount = Math.max(1, visibleTokens.length);
   const gap = row.width / visibleCount;
   const top = row.y + row.height * 0.18;
   const mid = row.y + row.height * 0.52;
   const bottom = row.y + row.height * 0.82;
   const marks = [];
 
-  for (let index = 0; index < visibleCount; index += 1) {
+  for (let index = 0; index < visibleTokens.length; index += 1) {
+    const token = visibleTokens[index];
     const center = row.x + gap * index + gap / 2;
     const half = Math.min(gap * 0.36, row.height * 0.24);
+    const tokenProps = { "data-pattern-token-id": token.id, "data-token-kind": token.kind };
 
-    if (row.stitchId === "chain-stitch") {
+    if (token.stitchId === "chain-stitch") {
       marks.push(
-        <ellipse key={index} cx={center} cy={mid} rx={half * 0.72} ry={row.height * 0.2} />,
+        <ellipse key={token.id} {...tokenProps} cx={center} cy={mid} rx={half * 0.72} ry={row.height * 0.2} />,
       );
-    } else if (row.stitchId === "slip-stitch") {
+    } else if (token.stitchId === "slip-stitch") {
       marks.push(
-        <path key={index} d={`M ${center - half} ${mid} H ${center + half} M ${center} ${top} V ${bottom}`} />,
+        <path key={token.id} {...tokenProps} d={`M ${center - half} ${mid} H ${center + half} M ${center} ${top} V ${bottom}`} />,
       );
-    } else if (row.stitchId === "single-crochet") {
+    } else if (token.stitchId === "single-crochet") {
       marks.push(
         <path
-          key={index}
+          key={token.id}
+          {...tokenProps}
           d={`M ${center - half} ${bottom} C ${center - half * 0.7} ${top}, ${center + half * 0.7} ${top}, ${center + half} ${bottom}`}
         />,
       );
-    } else if (row.stitchId === "half-double-crochet") {
+    } else if (token.stitchId === "half-double-crochet") {
       marks.push(
         <path
-          key={index}
+          key={token.id}
+          {...tokenProps}
           d={`M ${center - half} ${bottom} Q ${center} ${top} ${center + half} ${bottom} M ${center - half * 0.65} ${mid} H ${center + half * 0.65}`}
         />,
       );
-    } else if (row.stitchId === "double-crochet") {
+    } else if (token.stitchId === "double-crochet") {
       marks.push(
         <path
-          key={index}
+          key={token.id}
+          {...tokenProps}
           d={`M ${center - half * 0.55} ${bottom} L ${center + half * 0.42} ${top} M ${center - half * 0.2} ${top} L ${center + half * 0.58} ${bottom}`}
         />,
       );
-    } else if (row.stitchId === "treble-crochet" || row.stitchId === "double-treble-crochet") {
+    } else if (token.stitchId === "treble-crochet" || token.stitchId === "double-treble-crochet") {
       marks.push(
         <path
-          key={index}
+          key={token.id}
+          {...tokenProps}
           d={`M ${center - half * 0.62} ${bottom} L ${center + half * 0.42} ${top} M ${center - half * 0.22} ${top} L ${center + half * 0.58} ${bottom} M ${center - half * 0.45} ${mid} H ${center + half * 0.45}`}
         />,
       );
-    } else if (row.stitchId === "tunisian-simple-stitch") {
+    } else if (token.stitchId === "tunisian-simple-stitch") {
       marks.push(
         <path
-          key={index}
+          key={token.id}
+          {...tokenProps}
           d={`M ${center} ${top} V ${bottom} M ${center - half * 0.6} ${mid} H ${center + half * 0.6}`}
         />,
       );
     } else {
       marks.push(
         <path
-          key={index}
+          key={token.id}
+          {...tokenProps}
           d={`M ${center - half} ${bottom} L ${center} ${top} L ${center + half} ${bottom} M ${center} ${top} V ${bottom}`}
         />,
       );

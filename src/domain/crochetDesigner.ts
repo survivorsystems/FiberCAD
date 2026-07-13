@@ -85,6 +85,27 @@ export type RowStitchMath = {
   warnings: string[];
 };
 
+export type PatternStitchTokenKind = "regular" | "increase-child" | "decrease-result" | "skip-marker";
+
+export type PatternStitchToken = {
+  id: string;
+  rowId: string;
+  tokenIndex: number;
+  stitchId: string;
+  kind: PatternStitchTokenKind;
+  operationId?: string;
+  sourceStart?: number;
+  sourceCount?: number;
+  producedIndex?: number;
+  producedCount?: number;
+};
+
+export type CanvasTokenEditPolicy = {
+  canEditSingleToken: boolean;
+  reason?: "repeated-row-break-required";
+  message?: string;
+};
+
 export type StitchDimensionEstimate = {
   yarnWeightId: string;
   recommendedHookMm: number;
@@ -326,6 +347,7 @@ export type SvgRowRenderModel = {
   repeatCount: number;
   techniqueIds: string[];
   chartSymbols: CrochetChartSymbol[];
+  stitchTokens: PatternStitchToken[];
   selected: boolean;
 };
 
@@ -985,6 +1007,67 @@ export function calculateRowStitchMath(
     netStitchChange: row.stitchCount - previousStitchesAvailable,
     operations,
     warnings,
+  };
+}
+
+function regularToken(row: Pick<CrochetRow, "id" | "stitchId">, tokenIndex: number): PatternStitchToken {
+  return {
+    id: `${row.id}:token-${tokenIndex}`,
+    rowId: row.id,
+    tokenIndex,
+    stitchId: row.stitchId,
+    kind: "regular",
+  };
+}
+
+export function expandRowToPatternStitchTokens(row: CrochetRow): PatternStitchToken[] {
+  const tokens: PatternStitchToken[] = [];
+  const operations = [...(row.stitchOperations ?? [])].sort((left, right) => left.sourceStart - right.sourceStart);
+  let sourceCursor = 1;
+
+  operations.forEach((operation) => {
+    while (sourceCursor < operation.sourceStart && tokens.length < row.stitchCount) {
+      tokens.push(regularToken(row, tokens.length + 1));
+      sourceCursor += 1;
+    }
+
+    const producedCount = Math.min(operation.producedCount, row.stitchCount - tokens.length);
+    for (let producedIndex = 1; producedIndex <= producedCount; producedIndex += 1) {
+      tokens.push({
+        id: `${row.id}:${operation.id}:produced-${producedIndex}`,
+        rowId: row.id,
+        tokenIndex: tokens.length + 1,
+        stitchId: operation.stitchId,
+        kind: operation.operationType === "increase" ? "increase-child" : "decrease-result",
+        operationId: operation.id,
+        sourceStart: operation.sourceStart,
+        sourceCount: operation.sourceCount,
+        producedIndex,
+        producedCount: operation.producedCount,
+      });
+    }
+
+    sourceCursor = operation.sourceStart + operation.sourceCount;
+  });
+
+  while (tokens.length < row.stitchCount) {
+    tokens.push(regularToken(row, tokens.length + 1));
+  }
+
+  return tokens;
+}
+
+export function canvasTokenEditPolicy(row: Pick<CrochetRow, "repeatCount" | "rowCount">): CanvasTokenEditPolicy {
+  const repeatCount = effectiveRowRepeatCount(row);
+  if (repeatCount <= 1) {
+    return { canEditSingleToken: true };
+  }
+
+  return {
+    canEditSingleToken: false,
+    reason: "repeated-row-break-required",
+    message:
+      "This row is represented as a repeat. Edit every repeated instance together or break the repeat into explicit rows before changing one stitch.",
   };
 }
 
@@ -1924,6 +2007,7 @@ export function createSvgWorkspaceModel(
         repeatCount,
         techniqueIds: row.techniqueIds ?? [],
         chartSymbols: chartSymbolsForRow(row),
+        stitchTokens: expandRowToPatternStitchTokens(row),
         selected: row.id === selectedRowId,
       });
       cursorY += height + gap;

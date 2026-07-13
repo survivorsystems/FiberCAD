@@ -156,6 +156,11 @@ Rows 2-11: With #f4efe3, work 46 hdc in each row.
 ## Architecture Requirements
 
 - Keep project state as structured crochet data.
+- The structured crochet project/pattern model is the source of truth.
+- Canvas edits must be interpreted as pattern edits first, applied through domain transforms, and then re-rendered from the updated model.
+- The SVG workspace is a view of the pattern model, not a separate editable state that gets reconciled later.
+- Every visible stitch symbol must map to a `PatternStitchToken` derived from row data; no orphaned canvas stitches are allowed.
+- If a canvas edit targets a repeated row, the app must either edit all repeated instances or break the repeat into explicit rows with a warning.
 - The SVG renderer must receive project data and render it.
 - SVG components must not own or recreate crochet calculations.
 - Editing controls must update the shared project model.
