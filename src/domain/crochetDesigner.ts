@@ -133,6 +133,14 @@ export type CrochetTechnique = {
   description: string;
 };
 
+export type CrochetTechniqueBehavior = {
+  techniqueId: string;
+  stitchMultiple: number;
+  widthMultiplier: number;
+  heightMultiplier: number;
+  note: string;
+};
+
 export type CrochetTechniqueGroup = {
   id: CrochetTechniqueCategory;
   name: string;
@@ -699,8 +707,113 @@ const techniqueChartSymbols: Record<string, CrochetChartSymbol> = {
   "tech-blocking": "blocking",
 };
 
+export const specialtyTechniqueBehaviors: CrochetTechniqueBehavior[] = [
+  {
+    techniqueId: "tech-front-back-post",
+    stitchMultiple: 1,
+    widthMultiplier: 0.92,
+    heightMultiplier: 1.08,
+    note: "Post stitches pull fabric inward and add raised ribbing.",
+  },
+  {
+    techniqueId: "tech-bobble",
+    stitchMultiple: 1,
+    widthMultiplier: 1.05,
+    heightMultiplier: 1.32,
+    note: "Bobbles add raised texture and extra row depth.",
+  },
+  {
+    techniqueId: "tech-popcorn",
+    stitchMultiple: 1,
+    widthMultiplier: 1.08,
+    heightMultiplier: 1.28,
+    note: "Popcorn stitches create a raised grouped bump.",
+  },
+  {
+    techniqueId: "tech-puff",
+    stitchMultiple: 1,
+    widthMultiplier: 1.06,
+    heightMultiplier: 1.24,
+    note: "Puff stitches add soft gathered volume.",
+  },
+  {
+    techniqueId: "tech-cluster",
+    stitchMultiple: 1,
+    widthMultiplier: 1.02,
+    heightMultiplier: 1.16,
+    note: "Clusters close partial stitches together for denser texture.",
+  },
+  {
+    techniqueId: "tech-shell",
+    stitchMultiple: 6,
+    widthMultiplier: 1.12,
+    heightMultiplier: 1.18,
+    note: "Shell stitch repeats commonly work over six-stitch groups.",
+  },
+  {
+    techniqueId: "tech-v-stitch",
+    stitchMultiple: 2,
+    widthMultiplier: 1.18,
+    heightMultiplier: 1.05,
+    note: "V-stitch fabric opens outward and usually repeats over pairs.",
+  },
+  {
+    techniqueId: "tech-picot",
+    stitchMultiple: 1,
+    widthMultiplier: 1,
+    heightMultiplier: 1.12,
+    note: "Picots add small edge points without changing the base repeat.",
+  },
+  {
+    techniqueId: "tech-crocodile",
+    stitchMultiple: 6,
+    widthMultiplier: 1.18,
+    heightMultiplier: 1.72,
+    note: "Crocodile stitch uses layered scale repeats with extra depth.",
+  },
+  {
+    techniqueId: "tech-bullion",
+    stitchMultiple: 1,
+    widthMultiplier: 1.08,
+    heightMultiplier: 1.34,
+    note: "Bullion stitches wrap yarn around the hook for dense raised texture.",
+  },
+  {
+    techniqueId: "tech-star",
+    stitchMultiple: 2,
+    widthMultiplier: 1.05,
+    heightMultiplier: 1.22,
+    note: "Star stitch works best in even stitch counts.",
+  },
+  {
+    techniqueId: "tech-waffle",
+    stitchMultiple: 3,
+    widthMultiplier: 0.94,
+    heightMultiplier: 1.26,
+    note: "Waffle stitch contracts width and adds raised grid height.",
+  },
+  {
+    techniqueId: "tech-moss-linen",
+    stitchMultiple: 2,
+    widthMultiplier: 0.96,
+    heightMultiplier: 0.9,
+    note: "Moss or linen stitch alternates stitches and chains in even repeats.",
+  },
+  {
+    techniqueId: "tech-granny-stitch",
+    stitchMultiple: 3,
+    widthMultiplier: 1.1,
+    heightMultiplier: 1.14,
+    note: "Granny stitch groups three stitches with chain spaces.",
+  },
+];
+
 function uniqueIds(ids: string[] = []): string[] {
   return [...new Set(ids)];
+}
+
+function roundUpToMultiple(value: number, multiple: number): number {
+  return Math.max(multiple, Math.ceil(value / multiple) * multiple);
 }
 
 export function findCrochetTechnique(techniqueId: string): CrochetTechnique {
@@ -727,12 +840,43 @@ export function chartSymbolsForRow(row: CrochetRow): CrochetChartSymbol[] {
   return uniqueIds(symbols) as CrochetChartSymbol[];
 }
 
+export function behaviorForTechnique(techniqueId: string): CrochetTechniqueBehavior | undefined {
+  return specialtyTechniqueBehaviors.find((behavior) => behavior.techniqueId === techniqueId);
+}
+
+export function effectiveTechniqueBehavior(techniqueIds: string[] = []): CrochetTechniqueBehavior {
+  return techniqueIds.reduce<CrochetTechniqueBehavior>(
+    (combined, techniqueId) => {
+      const behavior = behaviorForTechnique(techniqueId);
+      if (!behavior) {
+        return combined;
+      }
+
+      return {
+        techniqueId: `${combined.techniqueId}+${behavior.techniqueId}`,
+        stitchMultiple: Math.max(combined.stitchMultiple, behavior.stitchMultiple),
+        widthMultiplier: combined.widthMultiplier * behavior.widthMultiplier,
+        heightMultiplier: combined.heightMultiplier * behavior.heightMultiplier,
+        note: combined.note ? `${combined.note} ${behavior.note}` : behavior.note,
+      };
+    },
+    {
+      techniqueId: "none",
+      stitchMultiple: 1,
+      widthMultiplier: 1,
+      heightMultiplier: 1,
+      note: "",
+    },
+  );
+}
+
 export function applyCrochetTechniqueToRowInput(
   input: CrochetRowInput,
   techniqueId: string,
 ): CrochetRowInput {
   const technique = findCrochetTechnique(techniqueId);
   const techniqueIds = uniqueIds([...(input.techniqueIds ?? []), technique.id]);
+  const behavior = behaviorForTechnique(technique.id);
 
   if (technique.stitchId) {
     return {
@@ -799,6 +943,17 @@ export function applyCrochetTechniqueToRowInput(
 
   if (technique.id === "tech-surface-crochet") {
     return { ...input, techniqueIds, colorwork: "surface-crochet" };
+  }
+
+  if (behavior) {
+    return {
+      ...input,
+      stitchCount:
+        input.widthInputMode === "stitch-count"
+          ? roundUpToMultiple(input.stitchCount ?? behavior.stitchMultiple, behavior.stitchMultiple)
+          : input.stitchCount,
+      techniqueIds,
+    };
   }
 
   return {
@@ -1124,11 +1279,12 @@ export function calculateRowEstimate(
 ): CrochetRow {
   const dimensions = lookupEstimatedStitchDimensions(row.stitchId, yarnSetup, stitchDefinitions);
   const repeatCount = effectiveRowRepeatCount(row);
+  const techniqueBehavior = effectiveTechniqueBehavior(row.techniqueIds);
 
   return {
     ...row,
-    estimatedPhysicalWidth: row.stitchCount * dimensions.stitchWidthIn,
-    estimatedPhysicalHeight: repeatCount * dimensions.rowHeightIn,
+    estimatedPhysicalWidth: row.stitchCount * dimensions.stitchWidthIn * techniqueBehavior.widthMultiplier,
+    estimatedPhysicalHeight: repeatCount * dimensions.rowHeightIn * techniqueBehavior.heightMultiplier,
   };
 }
 
@@ -1476,7 +1632,9 @@ export function generatePatternInstructions(
     const techniqueNotes = (row.techniqueIds ?? [])
       .map((techniqueId) => findCrochetTechnique(techniqueId).name)
       .join(", ");
-    const noteText = techniqueNotes ? ` Technique notes: ${techniqueNotes}.` : "";
+    const behaviorNote = effectiveTechniqueBehavior(row.techniqueIds).note;
+    const noteParts = [techniqueNotes, behaviorNote].filter(Boolean);
+    const noteText = noteParts.length > 0 ? ` Technique notes: ${noteParts.join(". ")}.` : "";
 
     nextRowNumber = rowEnd + 1;
 

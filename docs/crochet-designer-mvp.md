@@ -195,8 +195,9 @@ Do not add:
 - AI image generation.
 - Photorealistic crochet rendering.
 - Yardage estimates.
-- Advanced shaping.
 - Unrelated repository refactoring.
+
+Advanced shaping and stitch techniques may be added incrementally when they are represented as structured project data and implemented with deterministic crochet rules.
 
 ## Acceptance Criteria
 

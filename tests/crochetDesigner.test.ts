@@ -25,6 +25,7 @@ import {
   duplicateCrochetObject,
   estimateGrannySquareSize,
   estimateStitchCountForWidth,
+  behaviorForTechnique,
   findCrochetTechnique,
   generatePatternInstructions,
   isValidHexColor,
@@ -141,6 +142,73 @@ test("applies shaping techniques to a row input", () => {
   const decreased = applyCrochetTechniqueToRowInput(increased, "tech-invisible-decrease");
   assert.equal(decreased.stitchCount, 12);
   assert.deepEqual(decreased.shaping, { kind: "invisible-decrease", stitchDelta: -1 });
+});
+
+test("defines behavior rules for texture and specialty stitches", () => {
+  assert.deepEqual(behaviorForTechnique("tech-shell"), {
+    techniqueId: "tech-shell",
+    stitchMultiple: 6,
+    widthMultiplier: 1.12,
+    heightMultiplier: 1.18,
+    note: "Shell stitch repeats commonly work over six-stitch groups.",
+  });
+
+  assert.equal(behaviorForTechnique("tech-waffle")?.stitchMultiple, 3);
+  assert.equal(behaviorForTechnique("tech-crocodile")?.heightMultiplier, 1.72);
+});
+
+test("specialty techniques snap stitch counts to their repeat multiple", () => {
+  const input = {
+    stitchId: "double-crochet",
+    widthInputMode: "stitch-count" as const,
+    stitchCount: 14,
+    repeatCount: 1,
+    colorId: "color-cream",
+    position: 1,
+  };
+
+  const shell = applyCrochetTechniqueToRowInput(input, "tech-shell");
+  assert.equal(shell.stitchCount, 18);
+  assert.equal(shell.techniqueIds?.includes("tech-shell"), true);
+
+  const waffle = applyCrochetTechniqueToRowInput(input, "tech-waffle");
+  assert.equal(waffle.stitchCount, 15);
+});
+
+test("specialty techniques change physical row estimates and instruction notes", () => {
+  const createId = createIdFactory();
+  const plain = createCrochetRow(
+    {
+      stitchId: "double-crochet",
+      widthInputMode: "stitch-count",
+      stitchCount: 18,
+      repeatCount: 1,
+      colorId: "color-cream",
+      position: 1,
+    },
+    defaultYarnSetup,
+    createId,
+  );
+  const shell = createCrochetRow(
+    {
+      stitchId: "double-crochet",
+      widthInputMode: "stitch-count",
+      stitchCount: 18,
+      repeatCount: 1,
+      colorId: "color-cream",
+      position: 2,
+      techniqueIds: ["tech-shell"],
+    },
+    defaultYarnSetup,
+    createId,
+  );
+
+  assert.equal(shell.estimatedPhysicalWidth > plain.estimatedPhysicalWidth, true);
+  assert.equal(shell.estimatedPhysicalHeight > plain.estimatedPhysicalHeight, true);
+
+  const instructions = generatePatternInstructions([shell], seedProjectColors);
+  assert.match(instructions[0].text, /Shell stitch/);
+  assert.match(instructions[0].text, /six-stitch groups/);
 });
 
 test("applies round and colorwork techniques to project rows", () => {
