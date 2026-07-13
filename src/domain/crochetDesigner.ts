@@ -189,8 +189,20 @@ export type SvgRowRenderModel = {
   selected: boolean;
 };
 
+export type SvgObjectRenderModel = {
+  id: string;
+  type: CrochetObjectType;
+  name: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  selected: boolean;
+};
+
 export type SvgWorkspaceModel = {
   empty: boolean;
+  objects: SvgObjectRenderModel[];
   rows: SvgRowRenderModel[];
   viewBox: {
     x: number;
@@ -337,6 +349,24 @@ export function createRectanglePanelObject(
     name,
     position,
     rows: [],
+    estimatedPhysicalWidth: 0,
+    estimatedPhysicalHeight: 0,
+  };
+}
+
+export function createGrannySquareObject(
+  createId: IdFactory,
+  name = "Granny square",
+  rounds = 4,
+  position: CrochetObjectPosition = { x: 0, y: 0, layer: 0 },
+): GrannySquare {
+  return {
+    id: createId("object"),
+    type: "granny-square",
+    name,
+    position,
+    rows: [],
+    rounds: Math.max(1, Math.round(rounds)),
     estimatedPhysicalWidth: 0,
     estimatedPhysicalHeight: 0,
   };
@@ -532,14 +562,18 @@ export function calculateObjectEstimate(
   stitchDefinitions: StitchDefinition[] = seedStitchDefinitions,
 ): CrochetObject {
   const rows = object.rows.map((row) => calculateRowEstimate(row, yarnSetup, stitchDefinitions));
-  const estimatedPhysicalWidth = rows.reduce(
+  const rowEstimatedWidth = rows.reduce(
     (width, row) => Math.max(width, row.estimatedPhysicalWidth),
     0,
   );
-  const estimatedPhysicalHeight = rows.reduce(
+  const rowEstimatedHeight = rows.reduce(
     (height, row) => height + row.estimatedPhysicalHeight,
     0,
   );
+  const squareBaseSize =
+    object.type === "granny-square" ? estimateGrannySquareSize(object.rounds, yarnSetup, stitchDefinitions) : 0;
+  const estimatedPhysicalWidth = Math.max(rowEstimatedWidth, squareBaseSize);
+  const estimatedPhysicalHeight = Math.max(rowEstimatedHeight, squareBaseSize);
 
   return {
     ...object,
@@ -547,6 +581,16 @@ export function calculateObjectEstimate(
     estimatedPhysicalWidth,
     estimatedPhysicalHeight,
   };
+}
+
+export function estimateGrannySquareSize(
+  rounds: number,
+  yarnSetup: YarnSetup,
+  stitchDefinitions: StitchDefinition[] = seedStitchDefinitions,
+): number {
+  const dimensions = lookupEstimatedStitchDimensions("double-crochet", yarnSetup, stitchDefinitions);
+  const roundCount = Math.max(1, Math.round(rounds));
+  return roundCount * dimensions.rowHeightIn * 2.8;
 }
 
 export function calculateProjectEstimate(
@@ -677,7 +721,7 @@ export function duplicateCrochetObject(
   const duplicate = {
     ...object,
     id: createId("object"),
-    name: `${object.name} copy`,
+    name: object.type === "granny-square" ? `${object.name} variation` : `${object.name} copy`,
     position: {
       ...object.position,
       x: object.position.x + 1,
@@ -855,11 +899,27 @@ export function createSvgWorkspaceModel(
   const padding = 0.6;
   const panelGap = 0.85;
   let cursorX = padding;
+  const renderObjects: SvgObjectRenderModel[] = [];
   const renderRows: SvgRowRenderModel[] = [];
 
   project.objects.forEach((object) => {
+    const objectWidth = Math.max(2.4, object.estimatedPhysicalWidth);
+    const objectHeight = Math.max(2.4, object.estimatedPhysicalHeight);
+    if (object.type === "granny-square" || object.rows.length > 0) {
+      renderObjects.push({
+        id: object.id,
+        type: object.type,
+        name: object.name,
+        x: cursorX,
+        y: padding,
+        width: objectWidth,
+        height: objectHeight,
+        selected: object.rows.some((row) => row.id === selectedRowId),
+      });
+    }
+
     if (object.rows.length === 0) {
-      cursorX += Math.max(2.4, object.estimatedPhysicalWidth) + panelGap;
+      cursorX += objectWidth + panelGap;
       return;
     }
 
@@ -890,17 +950,24 @@ export function createSvgWorkspaceModel(
       cursorY += height + gap;
     });
 
-    cursorX += Math.max(2.4, object.estimatedPhysicalWidth) + panelGap;
+    cursorX += objectWidth + panelGap;
   });
 
-  const contentWidth = renderRows.reduce((width, row) => Math.max(width, row.x + row.width), padding);
+  const contentWidth = [...renderObjects, ...renderRows].reduce(
+    (width, item) => Math.max(width, item.x + item.width),
+    padding,
+  );
   const contentHeight =
-    renderRows.length === 0
+    renderObjects.length === 0 && renderRows.length === 0
       ? 5
-      : renderRows.reduce((height, row) => Math.max(height, row.y + row.height), padding);
+      : [...renderObjects, ...renderRows].reduce(
+          (height, item) => Math.max(height, item.y + item.height),
+          padding,
+        );
 
   return {
-    empty: renderRows.length === 0,
+    empty: renderObjects.length === 0 && renderRows.length === 0,
+    objects: renderObjects,
     rows: renderRows,
     viewBox: {
       x: 0,

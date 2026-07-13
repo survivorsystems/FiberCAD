@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import {
   addCrochetRowToObject,
   addCrochetObject,
+  createGrannySquareObject,
   createRectanglePanelObject,
   createCrochetRow,
   createFreestyleProject,
@@ -73,6 +74,20 @@ test("SVG workspace model renders rows from multiple panels with object IDs", ()
   assert.equal(model.rows[0].objectId, objectId);
   assert.equal(model.rows[1].objectId, panel.id);
   assert.equal(model.rows[1].x > model.rows[0].x, true);
+});
+
+test("SVG workspace model renders a granny square object without row strips", () => {
+  const createId = createIdFactory();
+  let project = createFreestyleProject();
+  const square = createGrannySquareObject(createId, "Motif A", 4, { x: 1, y: 0, layer: 1 });
+  project = addCrochetObject(project, square);
+  const model = createSvgWorkspaceModel(project);
+
+  assert.equal(model.empty, false);
+  assert.equal(model.objects.length, 1);
+  assert.equal(model.objects[0].id, square.id);
+  assert.equal(model.objects[0].type, "granny-square");
+  assert.equal(model.rows.length, 0);
 });
 
 test("row width changes when stitch count changes", () => {

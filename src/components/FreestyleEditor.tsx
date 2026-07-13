@@ -10,6 +10,7 @@ import {
   addCrochetObject,
   addCrochetRowToObject,
   calculateProjectEstimate,
+  createGrannySquareObject,
   createRectanglePanelObject,
   createCrochetRow,
   createFreestyleProject,
@@ -17,6 +18,7 @@ import {
   createSvgWorkspaceModel,
   defaultYarnSetup,
   deleteCrochetRowFromObject,
+  duplicateCrochetObject,
   duplicateCrochetRowInObject,
   estimateStitchCountForWidth,
   findObjectContainingRow,
@@ -93,6 +95,17 @@ function joinMethodLabel(method: PanelJoinMethod) {
   };
 
   return labels[method];
+}
+
+function objectTypeLabel(type: CrochetProject["objects"][number]["type"]) {
+  const labels: Record<CrochetProject["objects"][number]["type"], string> = {
+    "rectangle-panel": "Panel",
+    "granny-square": "Granny square",
+    border: "Border",
+    strap: "Strap",
+  };
+
+  return labels[type];
 }
 
 function rowToDraft(row: CrochetRow, project: CrochetProject): RowDraft {
@@ -321,6 +334,39 @@ export function FreestyleEditor() {
     setSelectedRowId("");
   }
 
+  function makeGrannySquare(name = `Granny square ${project.objects.length + 1}`) {
+    const squareNumber = project.objects.length + 1;
+    const square = createGrannySquareObject(createId.current, name, 4, {
+      x: squareNumber - 1,
+      y: 0,
+      layer: squareNumber - 1,
+    });
+    const nextProject = addCrochetObject(project, square);
+    setProject(nextProject);
+    setActiveObjectId(square.id);
+    setJoinTargetId(project.objects[0]?.id ?? "");
+    setSelectedRowId("");
+  }
+
+  function duplicateActiveSquare() {
+    if (!object || object.type !== "granny-square") {
+      const firstSquare = project.objects.find((candidate) => candidate.type === "granny-square");
+      if (!firstSquare) {
+        makeGrannySquare();
+        return;
+      }
+
+      setActiveObjectId(firstSquare.id);
+      return;
+    }
+
+    const nextProject = duplicateCrochetObject(project, object.id, createId.current);
+    const duplicate = nextProject.objects[nextProject.objects.length - 1];
+    setProject(nextProject);
+    setActiveObjectId(duplicate.id);
+    setSelectedRowId("");
+  }
+
   function updateConstructionMode(mode: ConstructionMode) {
     setProject((current) => setProjectConstructionMode(current, mode));
   }
@@ -464,6 +510,21 @@ export function FreestyleEditor() {
             <button className="button secondary light-button full-width-action" type="button" onClick={makePanel}>
               Make panel
             </button>
+            <div className="piece-action-grid" aria-label="Granny square actions">
+              <button className="button secondary light-button" type="button" onClick={() => makeGrannySquare()}>
+                New square
+              </button>
+              <button
+                className="button secondary light-button"
+                type="button"
+                onClick={() => makeGrannySquare(`Square variation ${project.objects.length + 1}`)}
+              >
+                New square same project
+              </button>
+              <button className="button secondary light-button" type="button" onClick={duplicateActiveSquare}>
+                Duplicate square
+              </button>
+            </div>
             <label>
               Yarn weight
               <select
@@ -614,7 +675,7 @@ export function FreestyleEditor() {
           </section>
 
           <section className="simulation-card compact-navigator" aria-label="Compact object navigator">
-            <h2>Panels</h2>
+            <h2>Project pieces</h2>
             <div className="panel-tools">
               <div className="panel-chip-row" role="list" aria-label="Project panels">
                 {project.objects.map((projectObject) => (
@@ -626,18 +687,19 @@ export function FreestyleEditor() {
                   >
                     <span>{projectObject.name}</span>
                     <small>
-                      {projectObject.rows.length} rows | {projectObject.estimatedPhysicalWidth.toFixed(1)} in
+                      {objectTypeLabel(projectObject.type)} | {projectObject.rows.length} rows |{" "}
+                      {projectObject.estimatedPhysicalWidth.toFixed(1)} in
                     </small>
                   </button>
                 ))}
               </div>
 
               <div className="join-panel-controls">
-                <h3>Join panels</h3>
+                <h3>Join pieces</h3>
                 {joinTargets.length ? (
                   <>
                     <label>
-                      Join {object?.name ?? "panel"} to
+                      Join {object?.name ?? "piece"} to
                       <select
                         value={joinTargetId || joinTargets[0]?.id || ""}
                         onChange={(event) => setJoinTargetId(event.target.value)}
@@ -661,11 +723,11 @@ export function FreestyleEditor() {
                       </select>
                     </label>
                     <button className="button secondary light-button" type="button" onClick={joinActivePanel}>
-                      Join panels
+                      {object?.type === "granny-square" ? "Join square" : "Join pieces"}
                     </button>
                   </>
                 ) : (
-                  <p className="empty-state">Make another panel before joining pieces.</p>
+                  <p className="empty-state">Make another piece before joining.</p>
                 )}
               </div>
 
@@ -676,7 +738,7 @@ export function FreestyleEditor() {
                     const to = project.objects.find((candidate) => candidate.id === join.toObjectId);
                     return (
                       <li key={join.id}>
-                        {from?.name ?? "Panel"} + {to?.name ?? "Panel"} | {joinMethodLabel(join.method)}
+                        {from?.name ?? "Piece"} + {to?.name ?? "Piece"} | {joinMethodLabel(join.method)}
                       </li>
                     );
                   })}

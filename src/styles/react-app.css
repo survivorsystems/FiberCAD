@@ -31,6 +31,36 @@
   transform-origin: center;
 }
 
+.svg-object {
+  pointer-events: none;
+}
+
+.svg-object-frame {
+  fill: rgba(255, 255, 255, 0.28);
+  stroke: rgba(58, 46, 40, 0.16);
+  stroke-width: 0.045;
+  stroke-dasharray: 0.16 0.12;
+}
+
+.svg-object-granny-square .svg-object-frame {
+  fill: rgba(247, 234, 216, 0.42);
+  stroke: rgba(62, 109, 104, 0.5);
+  stroke-dasharray: none;
+}
+
+.svg-square-round {
+  fill: none;
+  stroke: rgba(159, 95, 93, 0.58);
+  stroke-width: 0.055;
+}
+
+.svg-object-label {
+  fill: rgba(33, 27, 24, 0.72);
+  font-size: 0.22px;
+  font-weight: 900;
+  pointer-events: none;
+}
+
 .crochet-strip:hover .svg-row-fill,
 .crochet-strip:focus .svg-row-fill {
   filter: drop-shadow(0 0.14px 0.16px rgba(34, 25, 20, 0.25));
@@ -106,6 +136,16 @@
 .full-width-action {
   width: 100%;
   justify-content: center;
+}
+
+.piece-action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.piece-action-grid button:last-child {
+  grid-column: 1 / -1;
 }
 
 .panel-tools {

@@ -111,6 +111,51 @@ export function CrochetWorkspaceSvg({
             </g>
           ) : null}
 
+          {model.objects.map((object) => (
+            <g
+              key={object.id}
+              className={`svg-object svg-object-${object.type}${object.selected ? " is-selected" : ""}`}
+              data-svg-object-id={object.id}
+            >
+              <rect
+                className="svg-object-frame"
+                x={object.x}
+                y={object.y}
+                width={object.width}
+                height={object.height}
+                rx={object.type === "granny-square" ? "0.06" : "0.1"}
+              />
+              {object.type === "granny-square" ? (
+                <>
+                  <rect
+                    className="svg-square-round"
+                    x={object.x + object.width * 0.14}
+                    y={object.y + object.height * 0.14}
+                    width={object.width * 0.72}
+                    height={object.height * 0.72}
+                    rx="0.04"
+                  />
+                  <rect
+                    className="svg-square-round"
+                    x={object.x + object.width * 0.31}
+                    y={object.y + object.height * 0.31}
+                    width={object.width * 0.38}
+                    height={object.height * 0.38}
+                    rx="0.03"
+                  />
+                  <text
+                    className="svg-object-label"
+                    x={object.x + object.width / 2}
+                    y={object.y + object.height / 2}
+                    textAnchor="middle"
+                  >
+                    {object.name}
+                  </text>
+                </>
+              ) : null}
+            </g>
+          ))}
+
           {model.rows.map((row) => (
             <g
               key={row.id}

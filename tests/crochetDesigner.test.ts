@@ -9,6 +9,7 @@ import {
   addCrochetRowToObject,
   calculateObjectEstimate,
   convertConsecutiveIdenticalRowsToRepeatedSections,
+  createGrannySquareObject,
   createRectanglePanelObject,
   createCrochetRow,
   defaultYarnSetup,
@@ -16,6 +17,7 @@ import {
   deleteCrochetRowFromObject,
   duplicateCrochetRowInObject,
   duplicateCrochetObject,
+  estimateGrannySquareSize,
   estimateStitchCountForWidth,
   generatePatternInstructions,
   isValidHexColor,
@@ -150,6 +152,26 @@ test("joins two panels and removes joins when a panel is deleted", () => {
   assert.equal(joined.panelJoins?.[0].method, "seamed");
   assert.equal(duplicateJoin.panelJoins?.length, 1);
   assert.equal(deleted.panelJoins?.length, 0);
+});
+
+test("creates and duplicates a granny square with estimated dimensions", () => {
+  const createId = createIdFactory();
+  const square = createGrannySquareObject(createId, "Willow square", 5, { x: 1, y: 0, layer: 1 });
+  const withSquare = addCrochetObject(project(), square);
+  const duplicated = duplicateCrochetObject(withSquare, square.id, createId);
+
+  assert.equal(withSquare.objects[1].type, "granny-square");
+  assert.equal(withSquare.objects[1].estimatedPhysicalWidth > 0, true);
+  assert.equal(withSquare.objects[1].estimatedPhysicalWidth, withSquare.objects[1].estimatedPhysicalHeight);
+  assert.equal(duplicated.objects[2].type, "granny-square");
+  assert.equal(duplicated.objects[2].name, "Willow square variation");
+});
+
+test("estimates granny square size from round count and gauge", () => {
+  const small = estimateGrannySquareSize(3, defaultYarnSetup);
+  const large = estimateGrannySquareSize(6, defaultYarnSetup);
+
+  assert.equal(large > small, true);
 });
 
 test("converts consecutive identical rows into a repeated section", () => {
