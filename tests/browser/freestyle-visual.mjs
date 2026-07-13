@@ -47,7 +47,7 @@ let instructionText = "";
 
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
-  await page.goto(`${baseUrl}/create-your-own-pattern`, { waitUntil: "networkidle" });
+  await page.goto(`${baseUrl}/#/create-your-own-pattern`, { waitUntil: "networkidle" });
 
   await page.getByRole("button", { name: "Add row" }).click();
   await page.locator("[data-visual-stage]").screenshot({ path: currentPath });
