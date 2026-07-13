@@ -5,7 +5,11 @@ import {
   type CrochetProject,
   type CrochetRow,
   type CrochetRowInput,
+  type CrochetChartSymbol,
+  type CrochetColorworkMode,
   type CrochetTechnique,
+  type CrochetRoundMode,
+  type CrochetRowShaping,
   type GrannySquare,
   type PanelJoinMethod,
   type UploadedPatternSource,
@@ -13,7 +17,10 @@ import {
   addUploadedPatternSource,
   addCrochetObject,
   addCrochetRowToObject,
+  applyCrochetTechniqueToProject,
+  applyCrochetTechniqueToRowInput,
   calculateProjectEstimate,
+  chartSymbolForTechnique,
   crochetTechniqueGroups,
   createGrannySquareObject,
   createRectanglePanelObject,
@@ -47,6 +54,11 @@ type RowDraft = {
   desiredWidth: string;
   repeatCount: string;
   hex: string;
+  techniqueIds?: string[];
+  shaping?: CrochetRowShaping;
+  roundMode?: CrochetRoundMode;
+  colorwork?: CrochetColorworkMode;
+  finishingTechniqueIds?: string[];
 };
 
 type ProjectType = "blanket" | "pillow-cover" | "purse" | "shirt" | "pants";
@@ -133,6 +145,11 @@ function rowToDraft(row: CrochetRow, project: CrochetProject): RowDraft {
     desiredWidth: String(Math.max(0.25, Math.round(row.estimatedPhysicalWidth * 4) / 4)),
     repeatCount: String(row.repeatCount ?? row.rowCount ?? 1),
     hex: color?.hex ?? "#5f7f7a",
+    techniqueIds: row.techniqueIds,
+    shaping: row.shaping,
+    roundMode: row.roundMode,
+    colorwork: row.colorwork,
+    finishingTechniqueIds: row.finishingTechniqueIds,
   };
 }
 
@@ -146,6 +163,25 @@ function draftToInput(draft: RowDraft, colorId: string, position: number): Croch
     repeatCount: Number(draft.repeatCount),
     colorId,
     position,
+    techniqueIds: draft.techniqueIds,
+    shaping: draft.shaping,
+    roundMode: draft.roundMode,
+    colorwork: draft.colorwork,
+    finishingTechniqueIds: draft.finishingTechniqueIds,
+  };
+}
+
+function inputToDraft(input: CrochetRowInput, draft: RowDraft): RowDraft {
+  return {
+    ...draft,
+    stitchId: input.stitchId,
+    stitchCount: String(input.stitchCount ?? draft.stitchCount),
+    repeatCount: String(input.repeatCount),
+    techniqueIds: input.techniqueIds,
+    shaping: input.shaping,
+    roundMode: input.roundMode,
+    colorwork: input.colorwork,
+    finishingTechniqueIds: input.finishingTechniqueIds,
   };
 }
 
@@ -281,6 +317,76 @@ function DraftFields({ draft, onChange, idPrefix, estimate }: DraftFieldsProps) 
   );
 }
 
+const explicitSymbolFallbacks: CrochetChartSymbol[] = [
+  "chain-oval",
+  "slip-dot",
+  "single-cross",
+  "half-double-t",
+  "double-t",
+  "treble-t",
+  "double-treble-t",
+  "increase-fan",
+  "decrease-join",
+  "magic-ring",
+  "spiral-round",
+  "joined-round",
+  "shell",
+  "granny-cluster",
+  "v-stitch",
+  "picot",
+  "color-change",
+  "carried-yarn",
+  "tapestry",
+  "surface-slip",
+  "blocking",
+];
+
+function TechniqueSymbol({ symbol }: { symbol: CrochetChartSymbol }) {
+  const fallback = !explicitSymbolFallbacks.includes(symbol);
+
+  return (
+    <svg className="technique-symbol" viewBox="0 0 36 36" aria-hidden="true" focusable="false">
+      {symbol === "chain-oval" ? <ellipse cx="18" cy="18" rx="10" ry="5" /> : null}
+      {symbol === "slip-dot" ? <circle cx="18" cy="18" r="4.8" className="filled-symbol" /> : null}
+      {symbol === "single-cross" ? <path d="M 11 25 L 25 11 M 11 11 L 25 25" /> : null}
+      {symbol === "half-double-t" ? <path d="M 18 7 V 29 M 10 8 H 26" /> : null}
+      {symbol === "double-t" ? <path d="M 18 7 V 29 M 10 8 H 26 M 12 16 H 24" /> : null}
+      {symbol === "treble-t" || symbol === "double-treble-t" ? (
+        <path
+          d={
+            symbol === "treble-t"
+              ? "M 18 7 V 29 M 10 8 H 26 M 12 15 H 24 M 12 21 H 24"
+              : "M 18 6 V 30 M 10 7 H 26 M 12 13 H 24 M 12 18 H 24 M 12 23 H 24"
+          }
+        />
+      ) : null}
+      {symbol === "increase-fan" ? <path d="M 9 28 L 18 8 L 27 28 M 18 8 V 28" /> : null}
+      {symbol === "decrease-join" ? <path d="M 9 8 L 18 28 L 27 8 M 10 8 H 26" /> : null}
+      {symbol === "magic-ring" || symbol === "joined-round" ? (
+        <path d="M 18 8 A 10 10 0 1 1 17.9 8 M 18 8 L 24 8" />
+      ) : null}
+      {symbol === "spiral-round" ? <path d="M 24 18 A 6 6 0 1 1 18 12 A 10 10 0 1 0 28 22" /> : null}
+      {symbol === "shell" || symbol === "granny-cluster" ? (
+        <path d="M 8 27 C 10 10, 26 10, 28 27 M 13 27 C 14 13, 22 13, 23 27 M 18 27 V 11" />
+      ) : null}
+      {symbol === "v-stitch" ? <path d="M 10 8 L 18 28 L 26 8" /> : null}
+      {symbol === "picot" ? (
+        <path d="M 10 26 L 18 10 L 26 26 M 14 10 A 4 4 0 1 0 22 10 A 4 4 0 1 0 14 10" />
+      ) : null}
+      {["color-change", "carried-yarn", "tapestry", "surface-slip"].includes(symbol) ? (
+        <>
+          <path d="M 7 24 C 14 8, 22 28, 29 12" />
+          <path d="M 7 12 C 14 28, 22 8, 29 24" className="secondary-symbol-line" />
+        </>
+      ) : null}
+      {symbol === "blocking" ? (
+        <path d="M 9 9 H 27 V 27 H 9 Z M 7 7 L 11 11 M 29 7 L 25 11 M 29 29 L 25 25 M 7 29 L 11 25" />
+      ) : null}
+      {fallback ? <path d="M 18 7 V 29 M 9 18 H 27 M 11 25 L 25 11" /> : null}
+    </svg>
+  );
+}
+
 export function FreestyleEditor() {
   const createId = useRef(createIdFactory());
   const [project, setProject] = useState(() => createFreestyleProject());
@@ -393,13 +499,34 @@ export function FreestyleEditor() {
   }
 
   function selectTechnique(technique: CrochetTechnique) {
-    if (technique.stitchId) {
-      setAddDraft((draft) => ({ ...draft, stitchId: technique.stitchId ?? draft.stitchId }));
-      setTechniqueMessage(`${technique.name} selected for the next row.`);
-      return;
+    setAddDraft((draft) => {
+      const input = draftToInput(draft, "color-cream", (object?.rows.length ?? 0) + 1);
+      const updated = applyCrochetTechniqueToRowInput(input, technique.id);
+      return inputToDraft(updated, draft);
+    });
+
+    setProject((current) =>
+      applyCrochetTechniqueToProject(
+        current,
+        selectedObject?.id ?? object?.id ?? activeObjectId,
+        selectedRow?.id ?? "",
+        technique.id,
+      ),
+    );
+
+    if (selectedObject && selectedRow) {
+      setSelectedDraft((draft) => {
+        const input = draftToInput(draft, selectedRow.colorId, selectedRow.position);
+        const updated = applyCrochetTechniqueToRowInput(input, technique.id);
+        return inputToDraft(updated, draft);
+      });
     }
 
-    setTechniqueMessage(`${technique.name} is in the toolbox and will get behavior in a later pass.`);
+    setTechniqueMessage(
+      selectedRow
+        ? `${technique.name} applied to the selected row and queued for the next row.`
+        : `${technique.name} queued for the next row.`,
+    );
   }
 
   function makePanel() {
@@ -709,6 +836,7 @@ export function FreestyleEditor() {
                         className={`technique-tool${technique.stitchId === addDraft.stitchId ? " is-active" : ""}`}
                         onClick={() => selectTechnique(technique)}
                       >
+                        <TechniqueSymbol symbol={chartSymbolForTechnique(technique)} />
                         <strong>{technique.abbreviation ?? technique.name}</strong>
                         <span>{technique.abbreviation ? technique.name : technique.description}</span>
                       </button>

@@ -8,12 +8,16 @@ import {
   addCrochetObject,
   addCrochetRowToObject,
   addUploadedPatternSource,
+  applyCrochetTechniqueToProject,
+  applyCrochetTechniqueToRowInput,
   calculateObjectEstimate,
+  chartSymbolForTechnique,
   convertConsecutiveIdenticalRowsToRepeatedSections,
   crochetTechniqueGroups,
   createGrannySquareObject,
   createRectanglePanelObject,
   createCrochetRow,
+  createSvgWorkspaceModel,
   defaultYarnSetup,
   deleteCrochetObject,
   deleteCrochetRowFromObject,
@@ -21,6 +25,7 @@ import {
   duplicateCrochetObject,
   estimateGrannySquareSize,
   estimateStitchCountForWidth,
+  findCrochetTechnique,
   generatePatternInstructions,
   isValidHexColor,
   joinCrochetPanels,
@@ -110,6 +115,71 @@ test("includes crochet technique groups for the toolbox", () => {
   assert.equal(techniqueNames.includes("Bobble stitch"), true);
   assert.equal(techniqueNames.includes("Tapestry crochet"), true);
   assert.equal(techniqueNames.includes("Blocking"), true);
+});
+
+test("maps crochet techniques to chart symbols for the toolbox", () => {
+  assert.equal(chartSymbolForTechnique(findCrochetTechnique("tech-magic-ring")), "magic-ring");
+  assert.equal(chartSymbolForTechnique(findCrochetTechnique("tech-tapestry-crochet")), "tapestry");
+  assert.equal(chartSymbolForTechnique(findCrochetTechnique("tech-double-crochet")), "double-t");
+});
+
+test("applies shaping techniques to a row input", () => {
+  const input = {
+    stitchId: "single-crochet",
+    widthInputMode: "stitch-count" as const,
+    stitchCount: 12,
+    repeatCount: 1,
+    colorId: "color-cream",
+    position: 1,
+  };
+
+  const increased = applyCrochetTechniqueToRowInput(input, "tech-increase");
+  assert.equal(increased.stitchCount, 13);
+  assert.deepEqual(increased.shaping, { kind: "increase", stitchDelta: 1 });
+  assert.equal(increased.techniqueIds?.includes("tech-increase"), true);
+
+  const decreased = applyCrochetTechniqueToRowInput(increased, "tech-invisible-decrease");
+  assert.equal(decreased.stitchCount, 12);
+  assert.deepEqual(decreased.shaping, { kind: "invisible-decrease", stitchDelta: -1 });
+});
+
+test("applies round and colorwork techniques to project rows", () => {
+  const createId = createIdFactory();
+  const row = createCrochetRow(
+    {
+      stitchId: "single-crochet",
+      widthInputMode: "stitch-count",
+      stitchCount: 12,
+      repeatCount: 1,
+      colorId: "color-cream",
+      position: 1,
+    },
+    defaultYarnSetup,
+    createId,
+  );
+  const withRow = addCrochetRowToObject(project(), "object-panel", row);
+
+  const withMagicRing = applyCrochetTechniqueToProject(withRow, "object-panel", row.id, "tech-magic-ring");
+  assert.equal(withMagicRing.constructionMode, "in-the-round");
+  assert.equal(withMagicRing.roundStart, "magic-ring");
+  assert.equal(withMagicRing.objects[0].rows[0].roundMode, "magic-ring");
+
+  const withTapestry = applyCrochetTechniqueToProject(
+    withMagicRing,
+    "object-panel",
+    row.id,
+    "tech-tapestry-crochet",
+  );
+  assert.equal(withTapestry.objects[0].rows[0].colorwork, "tapestry-crochet");
+  assert.equal(withTapestry.objects[0].rows[0].techniqueIds?.includes("tech-tapestry-crochet"), true);
+
+  const model = createSvgWorkspaceModel(withTapestry, row.id);
+  assert.equal(model.rows[0].chartSymbols.includes("magic-ring"), true);
+  assert.equal(model.rows[0].chartSymbols.includes("tapestry"), true);
+
+  const instructions = generatePatternInstructions(withTapestry.objects[0].rows, withTapestry.colors);
+  assert.match(instructions[0].text, /Magic ring/);
+  assert.match(instructions[0].text, /Tapestry crochet/);
 });
 
 test("calculates an object's estimated physical width and height", () => {

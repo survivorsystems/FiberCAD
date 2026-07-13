@@ -1,4 +1,4 @@
-import type { SvgRowRenderModel, SvgWorkspaceModel } from "../domain/crochetDesigner";
+import type { CrochetChartSymbol, SvgRowRenderModel, SvgWorkspaceModel } from "../domain/crochetDesigner";
 
 type Rotation = {
   x: number;
@@ -79,6 +79,26 @@ function stitchMarks(row: SvgRowRenderModel) {
   }
 
   return marks;
+}
+
+function rowTechniqueSymbol(symbol: CrochetChartSymbol, index: number) {
+  const x = 0.12 + index * 0.22;
+  if (symbol === "increase-fan") {
+    return <path key={`${symbol}-${index}`} d={`M ${x} 0.28 L ${x + 0.1} 0.04 L ${x + 0.2} 0.28 M ${x + 0.1} 0.04 V 0.28`} />;
+  }
+  if (symbol === "decrease-join") {
+    return <path key={`${symbol}-${index}`} d={`M ${x} 0.04 L ${x + 0.1} 0.28 L ${x + 0.2} 0.04 M ${x} 0.04 H ${x + 0.2}`} />;
+  }
+  if (symbol === "magic-ring" || symbol === "spiral-round" || symbol === "joined-round") {
+    return <circle key={`${symbol}-${index}`} cx={x + 0.1} cy="0.16" r="0.08" />;
+  }
+  if (symbol === "color-change" || symbol === "carried-yarn" || symbol === "tapestry" || symbol === "surface-slip") {
+    return <path key={`${symbol}-${index}`} d={`M ${x} 0.24 C ${x + 0.06} 0.06, ${x + 0.14} 0.26, ${x + 0.2} 0.08`} />;
+  }
+  if (symbol === "blocking") {
+    return <rect key={`${symbol}-${index}`} x={x + 0.02} y="0.06" width="0.16" height="0.16" />;
+  }
+  return <path key={`${symbol}-${index}`} d={`M ${x + 0.1} 0.04 V 0.28 M ${x + 0.02} 0.16 H ${x + 0.18}`} />;
 }
 
 export function CrochetWorkspaceSvg({
@@ -225,6 +245,14 @@ export function CrochetWorkspaceSvg({
               >
                 {row.label}
               </text>
+              {row.chartSymbols.length > 1 ? (
+                <g
+                  className="svg-row-technique-symbols"
+                  transform={`translate(${row.x + row.width - Math.min(row.width * 0.34, 1.1)} ${row.y + 0.08}) scale(${Math.min(row.height, 0.5)})`}
+                >
+                  {row.chartSymbols.slice(1, 5).map((symbol, index) => rowTechniqueSymbol(symbol, index))}
+                </g>
+              ) : null}
             </g>
           ))}
         </svg>

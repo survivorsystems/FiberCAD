@@ -43,6 +43,20 @@ export type YarnSetup = {
   tension: "tight" | "average" | "loose";
 };
 
+export type CrochetRoundMode = "joined-round" | "magic-ring" | "spiral-rounds" | "turning-chain";
+
+export type CrochetColorworkMode =
+  | "changing-colors"
+  | "carrying-yarn"
+  | "tapestry-crochet"
+  | "surface-crochet";
+
+export type CrochetRowShaping = {
+  kind: "increase" | "decrease" | "invisible-decrease" | "short-row";
+  stitchDelta: number;
+  partialRow?: boolean;
+};
+
 export type StitchDimensionEstimate = {
   yarnWeightId: string;
   recommendedHookMm: number;
@@ -71,12 +85,51 @@ export type CrochetTechniqueCategory =
   | "colorwork-finishing"
   | "edging-finishing";
 
+export type CrochetChartSymbol =
+  | "chain-oval"
+  | "slip-dot"
+  | "single-cross"
+  | "half-double-t"
+  | "double-t"
+  | "treble-t"
+  | "double-treble-t"
+  | "increase-fan"
+  | "decrease-join"
+  | "short-row-turn"
+  | "magic-ring"
+  | "spiral-round"
+  | "joined-round"
+  | "post-stitch"
+  | "bobble"
+  | "popcorn"
+  | "puff"
+  | "cluster"
+  | "shell"
+  | "v-stitch"
+  | "picot"
+  | "crocodile"
+  | "bullion"
+  | "star"
+  | "waffle"
+  | "moss"
+  | "granny-cluster"
+  | "color-change"
+  | "carried-yarn"
+  | "tapestry"
+  | "surface-slip"
+  | "seam"
+  | "woven-end"
+  | "edging"
+  | "crab-stitch"
+  | "blocking";
+
 export type CrochetTechnique = {
   id: string;
   name: string;
   abbreviation?: string;
   category: CrochetTechniqueCategory;
   stitchId?: string;
+  chartSymbol?: CrochetChartSymbol;
   description: string;
 };
 
@@ -94,6 +147,11 @@ export type CrochetRow = {
   repeatCount?: number;
   colorId: string;
   position: number;
+  techniqueIds?: string[];
+  shaping?: CrochetRowShaping;
+  roundMode?: CrochetRoundMode;
+  colorwork?: CrochetColorworkMode;
+  finishingTechniqueIds?: string[];
   estimatedPhysicalWidth: number;
   estimatedPhysicalHeight: number;
 };
@@ -157,6 +215,8 @@ export type CrochetProject = {
   colors: ProjectColor[];
   uploadedPatterns?: UploadedPatternSource[];
   constructionMode?: ConstructionMode;
+  roundStart?: CrochetRoundMode;
+  finishingTechniqueIds?: string[];
   panelJoins?: PanelJoin[];
   objects: CrochetObject[];
 };
@@ -174,6 +234,11 @@ export type CrochetRowInput = {
   repeatCount: number;
   colorId: string;
   position: number;
+  techniqueIds?: string[];
+  shaping?: CrochetRowShaping;
+  roundMode?: CrochetRoundMode;
+  colorwork?: CrochetColorworkMode;
+  finishingTechniqueIds?: string[];
 };
 
 export type StitchCountEstimate = {
@@ -221,6 +286,8 @@ export type SvgRowRenderModel = {
   stitchAbbreviation: string;
   stitchCount: number;
   repeatCount: number;
+  techniqueIds: string[];
+  chartSymbols: CrochetChartSymbol[];
   selected: boolean;
 };
 
@@ -586,6 +653,231 @@ export const crochetTechniqueGroups: CrochetTechniqueGroup[] = [
   },
 ];
 
+const stitchChartSymbols: Record<string, CrochetChartSymbol> = {
+  "chain-stitch": "chain-oval",
+  "slip-stitch": "slip-dot",
+  "single-crochet": "single-cross",
+  "half-double-crochet": "half-double-t",
+  "double-crochet": "double-t",
+  "treble-crochet": "treble-t",
+  "double-treble-crochet": "double-treble-t",
+  "tunisian-simple-stitch": "single-cross",
+  "tunisian-knit-stitch": "double-t",
+};
+
+const techniqueChartSymbols: Record<string, CrochetChartSymbol> = {
+  "tech-increase": "increase-fan",
+  "tech-decrease": "decrease-join",
+  "tech-invisible-decrease": "decrease-join",
+  "tech-short-rows": "short-row-turn",
+  "tech-join-round-slip-stitch": "joined-round",
+  "tech-magic-ring": "magic-ring",
+  "tech-spiral-rounds": "spiral-round",
+  "tech-turning-chain": "chain-oval",
+  "tech-front-back-post": "post-stitch",
+  "tech-bobble": "bobble",
+  "tech-popcorn": "popcorn",
+  "tech-puff": "puff",
+  "tech-cluster": "cluster",
+  "tech-shell": "shell",
+  "tech-v-stitch": "v-stitch",
+  "tech-picot": "picot",
+  "tech-crocodile": "crocodile",
+  "tech-bullion": "bullion",
+  "tech-star": "star",
+  "tech-waffle": "waffle",
+  "tech-moss-linen": "moss",
+  "tech-granny-stitch": "granny-cluster",
+  "tech-changing-colors": "color-change",
+  "tech-carrying-yarn": "carried-yarn",
+  "tech-tapestry-crochet": "tapestry",
+  "tech-surface-crochet": "surface-slip",
+  "tech-seaming": "seam",
+  "tech-weaving-ends": "woven-end",
+  "tech-single-crochet-edging": "edging",
+  "tech-crab-stitch": "crab-stitch",
+  "tech-blocking": "blocking",
+};
+
+function uniqueIds(ids: string[] = []): string[] {
+  return [...new Set(ids)];
+}
+
+export function findCrochetTechnique(techniqueId: string): CrochetTechnique {
+  const technique = crochetTechniqueGroups
+    .flatMap((group) => group.techniques)
+    .find((candidate) => candidate.id === techniqueId);
+
+  if (!technique) {
+    throw new Error(`Unknown crochet technique: ${techniqueId}`);
+  }
+
+  return technique;
+}
+
+export function chartSymbolForTechnique(technique: CrochetTechnique): CrochetChartSymbol {
+  return technique.chartSymbol ?? techniqueChartSymbols[technique.id] ?? stitchChartSymbols[technique.stitchId ?? ""] ?? "single-cross";
+}
+
+export function chartSymbolsForRow(row: CrochetRow): CrochetChartSymbol[] {
+  const symbols = [stitchChartSymbols[row.stitchId] ?? "single-cross"];
+  (row.techniqueIds ?? []).forEach((techniqueId) => {
+    symbols.push(chartSymbolForTechnique(findCrochetTechnique(techniqueId)));
+  });
+  return uniqueIds(symbols) as CrochetChartSymbol[];
+}
+
+export function applyCrochetTechniqueToRowInput(
+  input: CrochetRowInput,
+  techniqueId: string,
+): CrochetRowInput {
+  const technique = findCrochetTechnique(techniqueId);
+  const techniqueIds = uniqueIds([...(input.techniqueIds ?? []), technique.id]);
+
+  if (technique.stitchId) {
+    return {
+      ...input,
+      stitchId: technique.stitchId,
+      techniqueIds,
+    };
+  }
+
+  if (technique.id === "tech-increase") {
+    return {
+      ...input,
+      stitchCount: input.widthInputMode === "stitch-count" ? (input.stitchCount ?? 1) + 1 : input.stitchCount,
+      techniqueIds,
+      shaping: { kind: "increase", stitchDelta: 1 },
+    };
+  }
+
+  if (technique.id === "tech-decrease" || technique.id === "tech-invisible-decrease") {
+    const kind = technique.id === "tech-invisible-decrease" ? "invisible-decrease" : "decrease";
+    return {
+      ...input,
+      stitchCount: input.widthInputMode === "stitch-count" ? Math.max(1, (input.stitchCount ?? 1) - 1) : input.stitchCount,
+      techniqueIds,
+      shaping: { kind, stitchDelta: -1 },
+    };
+  }
+
+  if (technique.id === "tech-short-rows") {
+    return {
+      ...input,
+      techniqueIds,
+      shaping: { kind: "short-row", stitchDelta: 0, partialRow: true },
+    };
+  }
+
+  if (technique.id === "tech-join-round-slip-stitch") {
+    return { ...input, techniqueIds, roundMode: "joined-round" };
+  }
+
+  if (technique.id === "tech-magic-ring") {
+    return { ...input, techniqueIds, roundMode: "magic-ring" };
+  }
+
+  if (technique.id === "tech-spiral-rounds") {
+    return { ...input, techniqueIds, roundMode: "spiral-rounds" };
+  }
+
+  if (technique.id === "tech-turning-chain") {
+    return { ...input, techniqueIds, roundMode: "turning-chain" };
+  }
+
+  if (technique.id === "tech-changing-colors") {
+    return { ...input, techniqueIds, colorwork: "changing-colors" };
+  }
+
+  if (technique.id === "tech-carrying-yarn") {
+    return { ...input, techniqueIds, colorwork: "carrying-yarn" };
+  }
+
+  if (technique.id === "tech-tapestry-crochet") {
+    return { ...input, techniqueIds, colorwork: "tapestry-crochet" };
+  }
+
+  if (technique.id === "tech-surface-crochet") {
+    return { ...input, techniqueIds, colorwork: "surface-crochet" };
+  }
+
+  return {
+    ...input,
+    techniqueIds,
+    finishingTechniqueIds:
+      technique.category === "colorwork-finishing" || technique.category === "edging-finishing"
+        ? uniqueIds([...(input.finishingTechniqueIds ?? []), technique.id])
+        : input.finishingTechniqueIds,
+  };
+}
+
+export function applyCrochetTechniqueToProject(
+  project: CrochetProject,
+  objectId: string,
+  rowId: string,
+  techniqueId: string,
+  stitchDefinitions: StitchDefinition[] = seedStitchDefinitions,
+): CrochetProject {
+  const technique = findCrochetTechnique(techniqueId);
+  let nextProject = project;
+
+  if (technique.id === "tech-magic-ring") {
+    nextProject = { ...nextProject, constructionMode: "in-the-round", roundStart: "magic-ring" };
+  } else if (technique.id === "tech-join-round-slip-stitch") {
+    nextProject = { ...nextProject, constructionMode: "in-the-round", roundStart: "joined-round" };
+  } else if (technique.id === "tech-spiral-rounds") {
+    nextProject = { ...nextProject, constructionMode: "in-the-round", roundStart: "spiral-rounds" };
+  } else if (technique.id === "tech-seaming") {
+    nextProject = {
+      ...nextProject,
+      finishingTechniqueIds: uniqueIds([...(nextProject.finishingTechniqueIds ?? []), technique.id]),
+    };
+  } else if (technique.id === "tech-blocking") {
+    nextProject = {
+      ...nextProject,
+      finishingTechniqueIds: uniqueIds([...(nextProject.finishingTechniqueIds ?? []), technique.id]),
+    };
+  }
+
+  if (!rowId) {
+    return nextProject;
+  }
+
+  return updateCrochetRowInObject(
+    nextProject,
+    objectId,
+    rowId,
+    (row) => {
+      const input: CrochetRowInput = {
+        stitchId: row.stitchId,
+        widthInputMode: "stitch-count",
+        stitchCount: row.stitchCount,
+        repeatCount: effectiveRowRepeatCount(row),
+        colorId: row.colorId,
+        position: row.position,
+        techniqueIds: row.techniqueIds,
+        shaping: row.shaping,
+        roundMode: row.roundMode,
+        colorwork: row.colorwork,
+        finishingTechniqueIds: row.finishingTechniqueIds,
+      };
+      const updated = applyCrochetTechniqueToRowInput(input, technique.id);
+      return {
+        ...row,
+        stitchId: updated.stitchId,
+        stitchCount: updated.stitchCount ?? row.stitchCount,
+        repeatCount: updated.repeatCount,
+        techniqueIds: updated.techniqueIds,
+        shaping: updated.shaping,
+        roundMode: updated.roundMode,
+        colorwork: updated.colorwork,
+        finishingTechniqueIds: updated.finishingTechniqueIds,
+      };
+    },
+    stitchDefinitions,
+  );
+}
+
 export function createIdFactory(startAt = 0): IdFactory {
   let index = startAt;
   return (prefix: string) => `${prefix}-${++index}`;
@@ -812,6 +1104,11 @@ export function createCrochetRow(
       repeatCount: input.repeatCount,
       colorId: input.colorId,
       position: input.position,
+      techniqueIds: input.techniqueIds,
+      shaping: input.shaping,
+      roundMode: input.roundMode,
+      colorwork: input.colorwork,
+      finishingTechniqueIds: input.finishingTechniqueIds,
       estimatedPhysicalWidth: 0,
       estimatedPhysicalHeight: 0,
     },
@@ -1176,6 +1473,10 @@ export function generatePatternInstructions(
       repeatCount === 1
         ? `work ${row.stitchCount} ${stitch.abbreviation}.`
         : `work ${row.stitchCount} ${stitch.abbreviation} in each row.`;
+    const techniqueNotes = (row.techniqueIds ?? [])
+      .map((techniqueId) => findCrochetTechnique(techniqueId).name)
+      .join(", ");
+    const noteText = techniqueNotes ? ` Technique notes: ${techniqueNotes}.` : "";
 
     nextRowNumber = rowEnd + 1;
 
@@ -1187,7 +1488,7 @@ export function generatePatternInstructions(
       stitchAbbreviation: stitch.abbreviation,
       stitchCount: row.stitchCount,
       repeatCount,
-      text: `${rowLabel}: With ${color?.hex ?? "unknown color"}, ${repeatText}`,
+      text: `${rowLabel}: With ${color?.hex ?? "unknown color"}, ${repeatText}${noteText}`,
     };
   });
 }
@@ -1266,6 +1567,8 @@ export function createSvgWorkspaceModel(
         stitchAbbreviation: stitch.abbreviation,
         stitchCount: row.stitchCount,
         repeatCount,
+        techniqueIds: row.techniqueIds ?? [],
+        chartSymbols: chartSymbolsForRow(row),
         selected: row.id === selectedRowId,
       });
       cursorY += height + gap;
@@ -1308,7 +1611,8 @@ function rowsAreIdenticalForRepeat(left: CrochetRow, right: CrochetRow): boolean
   return (
     left.stitchId === right.stitchId &&
     left.stitchCount === right.stitchCount &&
-    left.colorId === right.colorId
+    left.colorId === right.colorId &&
+    JSON.stringify(left.techniqueIds ?? []) === JSON.stringify(right.techniqueIds ?? [])
   );
 }
 

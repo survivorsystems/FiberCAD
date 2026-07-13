@@ -93,6 +93,20 @@
   stroke: rgba(37, 29, 25, 0.4);
 }
 
+.svg-row-technique-symbols {
+  pointer-events: none;
+}
+
+.svg-row-technique-symbols path,
+.svg-row-technique-symbols circle,
+.svg-row-technique-symbols rect {
+  fill: rgba(255, 250, 243, 0.72);
+  stroke: rgba(37, 29, 25, 0.72);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 0.026;
+}
+
 .rotation-controls {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
@@ -246,7 +260,9 @@
 
 .technique-tool {
   display: grid;
-  gap: 3px;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 3px 8px;
+  align-items: center;
   min-height: 62px;
   padding: 8px 9px;
   border: 1px solid rgba(58, 46, 40, 0.16);
@@ -258,6 +274,32 @@
   cursor: pointer;
 }
 
+.technique-symbol {
+  grid-row: span 2;
+  width: 34px;
+  height: 34px;
+  color: #3e6d68;
+}
+
+.technique-symbol path,
+.technique-symbol ellipse,
+.technique-symbol rect {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.2;
+}
+
+.technique-symbol .filled-symbol {
+  fill: currentColor;
+  stroke: none;
+}
+
+.technique-symbol .secondary-symbol-line {
+  opacity: 0.52;
+}
+
 .technique-tool.is-active {
   border-color: rgba(62, 109, 104, 0.56);
   background: rgba(95, 127, 122, 0.16);
@@ -265,11 +307,13 @@
 }
 
 .technique-tool strong {
+  min-width: 0;
   font-size: 0.86rem;
   font-weight: 950;
 }
 
 .technique-tool span {
+  min-width: 0;
   color: var(--muted);
   font-size: 0.72rem;
   font-weight: 800;
