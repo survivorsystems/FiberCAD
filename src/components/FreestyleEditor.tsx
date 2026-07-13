@@ -11,6 +11,9 @@ import {
   type CrochetRoundMode,
   type CrochetRowShaping,
   type StitchOperation,
+  type GrannySquareEdge,
+  type GrannySquareFoldAxis,
+  type GrannySquareTemplateId,
   type GrannySquare,
   type PanelJoinMethod,
   type UploadedPatternSource,
@@ -23,7 +26,7 @@ import {
   calculateProjectEstimate,
   chartSymbolForTechnique,
   crochetTechniqueGroups,
-  createGrannySquareObject,
+  createGrannySquareFromTemplate,
   createRectanglePanelObject,
   createCrochetRow,
   createFreestyleProject,
@@ -34,7 +37,9 @@ import {
   duplicateCrochetRowInObject,
   estimateStitchCountForWidth,
   findObjectContainingRow,
+  foldGrannySquareObject,
   getStitchDefinition,
+  grannySquareTemplates,
   isValidHexColor,
   joinCrochetPanels,
   seedStitchDefinitions,
@@ -83,6 +88,20 @@ const projectTypeOptions: Array<{ id: ProjectType; name: string }> = [
 ];
 
 const readablePatternTypes = new Set(["text/plain", "text/markdown", "application/json"]);
+
+const foldAxisOptions: Array<{ id: GrannySquareFoldAxis; name: string }> = [
+  { id: "vertical", name: "Vertical fold" },
+  { id: "horizontal", name: "Horizontal fold" },
+  { id: "diagonal-main", name: "Diagonal fold" },
+  { id: "diagonal-opposite", name: "Opposite diagonal fold" },
+];
+
+const seamEdgeOptions: Array<{ id: GrannySquareEdge; name: string }> = [
+  { id: "top", name: "Top" },
+  { id: "right", name: "Right" },
+  { id: "bottom", name: "Bottom" },
+  { id: "left", name: "Left" },
+];
 
 function colorIdForHex(project: CrochetProject, hex: string, createId: (prefix: string) => string) {
   const normalizedHex = hex.toLowerCase();
@@ -408,6 +427,8 @@ export function FreestyleEditor() {
   const [rotation, setRotation] = useState({ x: 0, y: 0, z: 0 });
   const [joinTargetId, setJoinTargetId] = useState("");
   const [joinMethod, setJoinMethod] = useState<PanelJoinMethod>("seamed");
+  const [squareTemplateId, setSquareTemplateId] =
+    useState<GrannySquareTemplateId>("traditional-granny-square");
 
   const object = project.objects.find((candidate) => candidate.id === activeObjectId) ?? project.objects[0];
   const selectedObject = selectedRowId ? findObjectContainingRow(project, selectedRowId) : undefined;
@@ -550,11 +571,16 @@ export function FreestyleEditor() {
 
   function makeGrannySquare(name = `Granny square ${project.objects.length + 1}`) {
     const squareNumber = project.objects.length + 1;
-    const square = createGrannySquareObject(createId.current, name, 4, {
-      x: squareNumber - 1,
-      y: 0,
-      layer: squareNumber - 1,
-    });
+    const squareBase = createGrannySquareFromTemplate(
+      createId.current,
+      squareTemplateId,
+      {
+        x: squareNumber - 1,
+        y: 0,
+        layer: squareNumber - 1,
+      },
+    );
+    const square = { ...squareBase, name };
     const nextProject = addCrochetObject(project, square);
     setProject(nextProject);
     setActiveObjectId(square.id);
@@ -596,6 +622,53 @@ export function FreestyleEditor() {
 
     const colorResult = colorIdForHex(project, hex, createId.current);
     setProject(updateGrannySquareObject(colorResult.project, activeSquare.id, { colorId: colorResult.colorId }));
+  }
+
+  function updateActiveSquareTemplate(templateId: GrannySquareTemplateId) {
+    if (!activeSquare) {
+      return;
+    }
+
+    const template = grannySquareTemplates.find((candidate) => candidate.id === templateId);
+    setProject((current) =>
+      updateGrannySquareObject(current, activeSquare.id, {
+        templateId,
+        rounds: template?.defaultRounds ?? activeSquare.rounds,
+        motifRepeatCount: template?.motifRepeatCount ?? activeSquare.motifRepeatCount,
+      }),
+    );
+  }
+
+  function updateActiveSquareFold(updates: Partial<{ folded: boolean; axis: GrannySquareFoldAxis; seamEdges: GrannySquareEdge[] }>) {
+    if (!activeSquare) {
+      return;
+    }
+
+    const currentFold = activeSquare.fold ?? {
+      folded: false,
+      axis: "vertical" as GrannySquareFoldAxis,
+      seamEdges: ["right"] as GrannySquareEdge[],
+    };
+    setProject((current) =>
+      foldGrannySquareObject(current, activeSquare.id, {
+        ...currentFold,
+        ...updates,
+      }),
+    );
+  }
+
+  function toggleSquareSeamEdge(edge: GrannySquareEdge) {
+    if (!activeSquare) {
+      return;
+    }
+
+    const seamEdges = activeSquare.fold?.seamEdges ?? ["right"];
+    updateActiveSquareFold({
+      folded: true,
+      seamEdges: seamEdges.includes(edge)
+        ? seamEdges.filter((candidate) => candidate !== edge)
+        : [...seamEdges, edge],
+    });
   }
 
   function updateConstructionMode(mode: ConstructionMode) {
@@ -889,6 +962,19 @@ export function FreestyleEditor() {
             <button className="button secondary light-button full-width-action" type="button" onClick={makePanel}>
               Make panel
             </button>
+            <label>
+              Granny square template
+              <select
+                value={squareTemplateId}
+                onChange={(event) => setSquareTemplateId(event.target.value as GrannySquareTemplateId)}
+              >
+                {grannySquareTemplates.map((template) => (
+                  <option key={template.id} value={template.id}>
+                    {template.name}
+                  </option>
+                ))}
+              </select>
+            </label>
             <div className="piece-action-grid" aria-label="Granny square actions">
               <button className="button secondary light-button" type="button" onClick={() => makeGrannySquare()}>
                 New square
@@ -1072,6 +1158,19 @@ export function FreestyleEditor() {
                   />
                 </label>
                 <label>
+                  Template
+                  <select
+                    value={activeSquare.templateId ?? "traditional-granny-square"}
+                    onChange={(event) => updateActiveSquareTemplate(event.target.value as GrannySquareTemplateId)}
+                  >
+                    {grannySquareTemplates.map((template) => (
+                      <option key={template.id} value={template.id}>
+                        {template.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
                   Rounds
                   <input
                     type="number"
@@ -1109,6 +1208,47 @@ export function FreestyleEditor() {
                     />
                   </label>
                 </div>
+                <fieldset>
+                  <legend>Fold and seam</legend>
+                  <label className="checkbox-row">
+                    <input
+                      type="checkbox"
+                      checked={activeSquare.fold?.folded ?? false}
+                      onChange={(event) => updateActiveSquareFold({ folded: event.target.checked })}
+                    />
+                    Fold square in half
+                  </label>
+                  <label>
+                    Fold axis
+                    <select
+                      value={activeSquare.fold?.axis ?? "vertical"}
+                      onChange={(event) =>
+                        updateActiveSquareFold({
+                          folded: true,
+                          axis: event.target.value as GrannySquareFoldAxis,
+                        })
+                      }
+                    >
+                      {foldAxisOptions.map((option) => (
+                        <option key={option.id} value={option.id}>
+                          {option.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <div className="seam-edge-grid" aria-label="Seam edges">
+                    {seamEdgeOptions.map((edge) => (
+                      <label key={edge.id} className="checkbox-row">
+                        <input
+                          type="checkbox"
+                          checked={(activeSquare.fold?.seamEdges ?? []).includes(edge.id)}
+                          onChange={() => toggleSquareSeamEdge(edge.id)}
+                        />
+                        {edge.name}
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
                 <button className="button secondary light-button" type="button" onClick={duplicateActiveSquare}>
                   Duplicate square
                 </button>

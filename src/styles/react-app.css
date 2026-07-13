@@ -61,6 +61,37 @@
   pointer-events: none;
 }
 
+.svg-square-template-symbols {
+  fill: none;
+  stroke: rgba(37, 29, 25, 0.56);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 0.026;
+  pointer-events: none;
+}
+
+.svg-square-template-symbols .filled-symbol {
+  fill: rgba(37, 29, 25, 0.56);
+  stroke: none;
+}
+
+.svg-square-fold-line {
+  fill: none;
+  stroke: rgba(62, 109, 104, 0.72);
+  stroke-dasharray: 0.1 0.08;
+  stroke-linecap: round;
+  stroke-width: 0.035;
+  pointer-events: none;
+}
+
+.svg-square-seam-edge {
+  fill: none;
+  stroke: rgba(159, 95, 93, 0.86);
+  stroke-linecap: round;
+  stroke-width: 0.06;
+  pointer-events: none;
+}
+
 .crochet-strip:hover .svg-row-fill,
 .crochet-strip:focus .svg-row-fill {
   filter: drop-shadow(0 0.14px 0.16px rgba(34, 25, 20, 0.25));
@@ -231,6 +262,25 @@
 
 .piece-action-grid button:last-child {
   grid-column: 1 / -1;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
+.checkbox-row input {
+  width: auto;
+}
+
+.seam-edge-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .technique-groups {

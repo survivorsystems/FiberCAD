@@ -76,6 +76,21 @@ export type StitchOperation = {
   instruction: string;
 };
 
+export type GrannySquareTemplateId =
+  | "traditional-granny-square"
+  | "solid-granny-square"
+  | "sunburst-granny-square";
+
+export type GrannySquareFoldAxis = "vertical" | "horizontal" | "diagonal-main" | "diagonal-opposite";
+
+export type GrannySquareEdge = "top" | "right" | "bottom" | "left";
+
+export type GrannySquareFold = {
+  folded: boolean;
+  axis: GrannySquareFoldAxis;
+  seamEdges: GrannySquareEdge[];
+};
+
 export type RowStitchMath = {
   previousStitchesAvailable: number;
   previousStitchesConsumed: number;
@@ -190,6 +205,16 @@ export type CrochetTechniqueBehavior = {
   note: string;
 };
 
+export type GrannySquareTemplate = {
+  id: GrannySquareTemplateId;
+  name: string;
+  defaultRounds: number;
+  motifRepeatCount: number;
+  stitchPattern: string;
+  chartSymbols: CrochetChartSymbol[];
+  notes: string;
+};
+
 export type CrochetTechniqueGroup = {
   id: CrochetTechniqueCategory;
   name: string;
@@ -247,9 +272,11 @@ export type RectanglePanel = CrochetObjectBase & {
 
 export type GrannySquare = CrochetObjectBase & {
   type: "granny-square";
+  templateId?: GrannySquareTemplateId;
   rounds: number;
   motifRepeatCount?: number;
   colorId?: string;
+  fold?: GrannySquareFold;
 };
 
 export type Border = CrochetObjectBase & {
@@ -360,6 +387,9 @@ export type SvgObjectRenderModel = {
   width: number;
   height: number;
   colorHex: string;
+  templateId?: GrannySquareTemplateId;
+  fold?: GrannySquareFold;
+  chartSymbols?: CrochetChartSymbol[];
   selected: boolean;
 };
 
@@ -857,6 +887,36 @@ export const specialtyTechniqueBehaviors: CrochetTechniqueBehavior[] = [
     widthMultiplier: 1.1,
     heightMultiplier: 1.14,
     note: "Granny stitch groups three stitches with chain spaces.",
+  },
+];
+
+export const grannySquareTemplates: GrannySquareTemplate[] = [
+  {
+    id: "traditional-granny-square",
+    name: "Traditional granny square",
+    defaultRounds: 4,
+    motifRepeatCount: 4,
+    stitchPattern: "Classic clusters of 3 dc separated by chain spaces around four corners.",
+    chartSymbols: ["magic-ring", "granny-cluster", "chain-oval"],
+    notes: "Good starter square for blankets, bags, cardigans, and modular projects.",
+  },
+  {
+    id: "solid-granny-square",
+    name: "Solid granny square",
+    defaultRounds: 5,
+    motifRepeatCount: 4,
+    stitchPattern: "Mostly solid dc rounds with corner increases to keep a square shape.",
+    chartSymbols: ["magic-ring", "double-t", "increase-fan"],
+    notes: "Useful when the user wants fewer gaps and a denser fabric.",
+  },
+  {
+    id: "sunburst-granny-square",
+    name: "Sunburst granny square",
+    defaultRounds: 4,
+    motifRepeatCount: 4,
+    stitchPattern: "Round center with puff or cluster texture, then squared with corner groups.",
+    chartSymbols: ["magic-ring", "puff", "cluster", "granny-cluster"],
+    notes: "Good for floral or textured motifs before the later hexagon template pass.",
   },
 ];
 
@@ -1358,6 +1418,7 @@ export function createGrannySquareObject(
   rounds = 4,
   position: CrochetObjectPosition = { x: 0, y: 0, layer: 0 },
   colorId = "color-cream",
+  templateId: GrannySquareTemplateId = "traditional-granny-square",
 ): GrannySquare {
   return {
     id: createId("object"),
@@ -1365,11 +1426,42 @@ export function createGrannySquareObject(
     name,
     position,
     rows: [],
+    templateId,
     rounds: Math.max(1, Math.round(rounds)),
     motifRepeatCount: 1,
     colorId,
     estimatedPhysicalWidth: 0,
     estimatedPhysicalHeight: 0,
+  };
+}
+
+export function getGrannySquareTemplate(templateId: GrannySquareTemplateId): GrannySquareTemplate {
+  const template = grannySquareTemplates.find((candidate) => candidate.id === templateId);
+  if (!template) {
+    throw new Error(`Unknown granny square template: ${templateId}`);
+  }
+
+  return template;
+}
+
+export function createGrannySquareFromTemplate(
+  createId: IdFactory,
+  templateId: GrannySquareTemplateId,
+  position: CrochetObjectPosition = { x: 0, y: 0, layer: 0 },
+  colorId = "color-cream",
+): GrannySquare {
+  const template = getGrannySquareTemplate(templateId);
+  const square = createGrannySquareObject(
+    createId,
+    template.name,
+    template.defaultRounds,
+    position,
+    colorId,
+    template.id,
+  );
+  return {
+    ...square,
+    motifRepeatCount: template.motifRepeatCount,
   };
 }
 
@@ -1650,7 +1742,7 @@ export function addUploadedPatternSource(
 export function updateGrannySquareObject(
   project: CrochetProject,
   objectId: string,
-  updates: Partial<Pick<GrannySquare, "name" | "rounds" | "motifRepeatCount" | "colorId">>,
+  updates: Partial<Pick<GrannySquare, "name" | "templateId" | "rounds" | "motifRepeatCount" | "colorId" | "fold">>,
   stitchDefinitions: StitchDefinition[] = seedStitchDefinitions,
 ): CrochetProject {
   return updateCrochetObject(project, objectId, (object) => {
@@ -1662,6 +1754,7 @@ export function updateGrannySquareObject(
       {
         ...object,
         ...updates,
+        templateId: updates.templateId ?? object.templateId,
         rounds: Math.max(1, Math.round(updates.rounds ?? object.rounds)),
         motifRepeatCount: Math.max(1, Math.round(updates.motifRepeatCount ?? object.motifRepeatCount ?? 1)),
       },
@@ -1669,6 +1762,26 @@ export function updateGrannySquareObject(
       stitchDefinitions,
     ) as GrannySquare;
   });
+}
+
+export function foldGrannySquareObject(
+  project: CrochetProject,
+  objectId: string,
+  fold: GrannySquareFold,
+  stitchDefinitions: StitchDefinition[] = seedStitchDefinitions,
+): CrochetProject {
+  return updateGrannySquareObject(
+    project,
+    objectId,
+    {
+      fold: {
+        folded: fold.folded,
+        axis: fold.axis,
+        seamEdges: uniqueIds(fold.seamEdges) as GrannySquareEdge[],
+      },
+    },
+    stitchDefinitions,
+  );
 }
 
 export function joinCrochetPanels(
@@ -1974,6 +2087,12 @@ export function createSvgWorkspaceModel(
           object.type === "granny-square"
             ? project.colors.find((color) => color.id === object.colorId)?.hex ?? "#f7ead8"
             : "#ffffff",
+        templateId: object.type === "granny-square" ? object.templateId : undefined,
+        fold: object.type === "granny-square" ? object.fold : undefined,
+        chartSymbols:
+          object.type === "granny-square"
+            ? getGrannySquareTemplate(object.templateId ?? "traditional-granny-square").chartSymbols
+            : undefined,
         selected: object.rows.some((row) => row.id === selectedRowId),
       });
     }

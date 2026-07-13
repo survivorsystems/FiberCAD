@@ -110,6 +110,37 @@ function rowTechniqueSymbol(symbol: CrochetChartSymbol, index: number) {
   return <path key={`${symbol}-${index}`} d={`M ${x + 0.1} 0.04 V 0.28 M ${x + 0.02} 0.16 H ${x + 0.18}`} />;
 }
 
+function squareFoldPath(object: SvgWorkspaceModel["objects"][number]) {
+  if (!object.fold?.folded) {
+    return "";
+  }
+
+  if (object.fold.axis === "vertical") {
+    return `M ${object.x + object.width / 2} ${object.y} V ${object.y + object.height}`;
+  }
+  if (object.fold.axis === "horizontal") {
+    return `M ${object.x} ${object.y + object.height / 2} H ${object.x + object.width}`;
+  }
+  if (object.fold.axis === "diagonal-opposite") {
+    return `M ${object.x + object.width} ${object.y} L ${object.x} ${object.y + object.height}`;
+  }
+  return `M ${object.x} ${object.y} L ${object.x + object.width} ${object.y + object.height}`;
+}
+
+function seamEdgePath(object: SvgWorkspaceModel["objects"][number], edge: string) {
+  const inset = Math.min(object.width, object.height) * 0.035;
+  if (edge === "top") {
+    return `M ${object.x + inset} ${object.y + inset} H ${object.x + object.width - inset}`;
+  }
+  if (edge === "right") {
+    return `M ${object.x + object.width - inset} ${object.y + inset} V ${object.y + object.height - inset}`;
+  }
+  if (edge === "bottom") {
+    return `M ${object.x + inset} ${object.y + object.height - inset} H ${object.x + object.width - inset}`;
+  }
+  return `M ${object.x + inset} ${object.y + inset} V ${object.y + object.height - inset}`;
+}
+
 export function CrochetWorkspaceSvg({
   model,
   rotation,
@@ -196,6 +227,24 @@ export function CrochetWorkspaceSvg({
                   >
                     {object.name}
                   </text>
+                  <g className="svg-square-template-symbols">
+                    {(object.chartSymbols ?? []).slice(0, 4).map((symbol, index) => (
+                      <g
+                        key={`${object.id}-${symbol}-${index}`}
+                        transform={`translate(${object.x + object.width * (0.26 + index * 0.16)} ${object.y + object.height * 0.72}) scale(${Math.min(object.width, object.height) * 0.12})`}
+                      >
+                        {rowTechniqueSymbol(symbol, 0)}
+                      </g>
+                    ))}
+                  </g>
+                  {object.fold?.folded ? (
+                    <>
+                      <path className="svg-square-fold-line" d={squareFoldPath(object)} />
+                      {object.fold.seamEdges.map((edge) => (
+                        <path key={`${object.id}-${edge}`} className="svg-square-seam-edge" d={seamEdgePath(object, edge)} />
+                      ))}
+                    </>
+                  ) : null}
                 </>
               ) : null}
             </g>

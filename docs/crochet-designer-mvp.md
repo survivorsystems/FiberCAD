@@ -192,7 +192,6 @@ Do not add:
 - Drag-and-drop positioning.
 - Garment templates.
 - Shirts.
-- Granny-square layouts.
 - Borders.
 - Straps.
 - Supabase persistence.
@@ -202,7 +201,7 @@ Do not add:
 - Yardage estimates.
 - Unrelated repository refactoring.
 
-Advanced shaping and stitch techniques may be added incrementally when they are represented as structured project data and implemented with deterministic crochet rules.
+Advanced shaping, stitch techniques, and granny-square project features may be added incrementally when they are represented as structured project data and implemented with deterministic crochet rules.
 
 ## Acceptance Criteria
 

@@ -20,6 +20,7 @@ import {
   convertConsecutiveIdenticalRowsToRepeatedSections,
   crochetTechniqueGroups,
   createFreestyleProject,
+  createGrannySquareFromTemplate,
   createGrannySquareObject,
   createRectanglePanelObject,
   createCrochetRow,
@@ -34,7 +35,10 @@ import {
   expandRowToPatternStitchTokens,
   behaviorForTechnique,
   findCrochetTechnique,
+  foldGrannySquareObject,
   generatePatternInstructions,
+  getGrannySquareTemplate,
+  grannySquareTemplates,
   isValidHexColor,
   joinCrochetPanels,
   lookupEstimatedStitchDimensions,
@@ -502,6 +506,59 @@ test("creates and duplicates a granny square with estimated dimensions", () => {
   assert.equal(withSquare.objects[1].estimatedPhysicalWidth, withSquare.objects[1].estimatedPhysicalHeight);
   assert.equal(duplicated.objects[2].type, "granny-square");
   assert.equal(duplicated.objects[2].name, "Willow square variation");
+});
+
+test("creates premade granny squares from templates", () => {
+  const createId = createIdFactory();
+  const template = getGrannySquareTemplate("solid-granny-square");
+  const square = createGrannySquareFromTemplate(createId, "solid-granny-square");
+
+  assert.equal(grannySquareTemplates.length >= 3, true);
+  assert.equal(template.name, "Solid granny square");
+  assert.equal(square.templateId, "solid-granny-square");
+  assert.equal(square.rounds, template.defaultRounds);
+  assert.equal(square.motifRepeatCount, template.motifRepeatCount);
+});
+
+test("folds a granny square and stores seam edges in the pattern model", () => {
+  const createId = createIdFactory();
+  const square = createGrannySquareFromTemplate(createId, "traditional-granny-square");
+  const withSquare = addCrochetObject(project(), square);
+  const folded = foldGrannySquareObject(withSquare, square.id, {
+    folded: true,
+    axis: "vertical",
+    seamEdges: ["right", "bottom", "right"],
+  });
+  const foldedSquare = folded.objects.find((candidate) => candidate.id === square.id);
+
+  assert.equal(foldedSquare?.type, "granny-square");
+  if (foldedSquare?.type === "granny-square") {
+    assert.deepEqual(foldedSquare.fold, {
+      folded: true,
+      axis: "vertical",
+      seamEdges: ["right", "bottom"],
+    });
+  }
+});
+
+test("SVG workspace model exposes granny square template and fold state", () => {
+  const createId = createIdFactory();
+  const square = createGrannySquareFromTemplate(createId, "sunburst-granny-square");
+  const withSquare = addCrochetObject(project(), square);
+  const folded = foldGrannySquareObject(withSquare, square.id, {
+    folded: true,
+    axis: "diagonal-main",
+    seamEdges: ["top", "left"],
+  });
+  const modelObject = createSvgWorkspaceModel(folded).objects.find((candidate) => candidate.id === square.id);
+
+  assert.equal(modelObject?.templateId, "sunburst-granny-square");
+  assert.equal(modelObject?.chartSymbols?.includes("puff"), true);
+  assert.deepEqual(modelObject?.fold, {
+    folded: true,
+    axis: "diagonal-main",
+    seamEdges: ["top", "left"],
+  });
 });
 
 test("estimates granny square size from round count and gauge", () => {
