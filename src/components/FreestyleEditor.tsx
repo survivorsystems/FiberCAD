@@ -544,6 +544,17 @@ export function FreestyleEditor() {
               )}
             </ol>
           </section>
+
+          <section className="simulation-card premium-export" aria-label="Premium PDF export">
+            <div>
+              <h2>Print pattern</h2>
+              <p>Export the visual layout and written instructions as a printable PDF.</p>
+            </div>
+            <button type="button" disabled aria-disabled="true">
+              Export PDF
+            </button>
+            <span>Premium feature planned</span>
+          </section>
         </aside>
       </div>
     </section>
