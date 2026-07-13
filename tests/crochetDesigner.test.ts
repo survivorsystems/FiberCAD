@@ -7,6 +7,7 @@ import {
   type StitchDefinition,
   addCrochetObject,
   addCrochetRowToObject,
+  addUploadedPatternSource,
   calculateObjectEstimate,
   convertConsecutiveIdenticalRowsToRepeatedSections,
   createGrannySquareObject,
@@ -140,6 +141,24 @@ test("adds a rectangle panel and tracks construction mode immutably", () => {
   assert.equal(inTheRound.constructionMode, "in-the-round");
   assert.equal(withPanel.constructionMode, undefined);
 });
+
+test("adds uploaded pattern source metadata immutably", () => {
+  const original = project();
+  const updated = addUploadedPatternSource(original, {
+    id: "pattern-1",
+    fileName: "dishcloth.md",
+    fileType: "text/markdown",
+    fileSizeBytes: 128,
+    uploadedAt: "2026-07-12T00:00:00.000Z",
+    sourceText: "Row 1: ch 31.",
+    status: "text-ready",
+  });
+
+  assert.equal(original.uploadedPatterns, undefined);
+  assert.equal(updated.uploadedPatterns?.length, 1);
+  assert.equal(updated.uploadedPatterns?.[0].fileName, "dishcloth.md");
+});
+
 
 test("joins two panels and removes joins when a panel is deleted", () => {
   const createId = createIdFactory();

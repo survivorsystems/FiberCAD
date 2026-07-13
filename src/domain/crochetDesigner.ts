@@ -12,6 +12,16 @@ export type PanelJoin = {
   notes?: string;
 };
 
+export type UploadedPatternSource = {
+  id: string;
+  fileName: string;
+  fileType: string;
+  fileSizeBytes: number;
+  uploadedAt: string;
+  sourceText?: string;
+  status: "text-ready" | "metadata-only";
+};
+
 export type CrochetObjectPosition = {
   x: number;
   y: number;
@@ -122,6 +132,7 @@ export type CrochetProject = {
   name: string;
   yarnSetup: YarnSetup;
   colors: ProjectColor[];
+  uploadedPatterns?: UploadedPatternSource[];
   constructionMode?: ConstructionMode;
   panelJoins?: PanelJoin[];
   objects: CrochetObject[];
@@ -324,6 +335,7 @@ export function createFreestyleProject(): CrochetProject {
     name: "Freestyle crochet draft",
     yarnSetup: defaultYarnSetup,
     colors: seedProjectColors,
+    uploadedPatterns: [],
     constructionMode: "flat-panel",
     panelJoins: [],
     objects: [
@@ -631,6 +643,16 @@ export function setProjectConstructionMode(
   return {
     ...project,
     constructionMode,
+  };
+}
+
+export function addUploadedPatternSource(
+  project: CrochetProject,
+  uploadedPattern: UploadedPatternSource,
+): CrochetProject {
+  return {
+    ...project,
+    uploadedPatterns: [...(project.uploadedPatterns ?? []), uploadedPattern],
   };
 }
 

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { type ChangeEvent, useMemo, useRef, useState } from "react";
 import { CrochetWorkspaceSvg } from "./CrochetWorkspaceSvg";
 import {
   type ConstructionMode,
@@ -7,7 +7,9 @@ import {
   type CrochetRowInput,
   type GrannySquare,
   type PanelJoinMethod,
+  type UploadedPatternSource,
   type YarnSetup,
+  addUploadedPatternSource,
   addCrochetObject,
   addCrochetRowToObject,
   calculateProjectEstimate,
@@ -17,13 +19,11 @@ import {
   createFreestyleProject,
   createIdFactory,
   createSvgWorkspaceModel,
-  defaultYarnSetup,
   deleteCrochetRowFromObject,
   duplicateCrochetObject,
   duplicateCrochetRowInObject,
   estimateStitchCountForWidth,
   findObjectContainingRow,
-  generatePatternInstructions,
   getStitchDefinition,
   isValidHexColor,
   joinCrochetPanels,
@@ -47,6 +47,8 @@ type RowDraft = {
   hex: string;
 };
 
+type ProjectType = "blanket" | "pillow-cover" | "purse" | "shirt" | "pants";
+
 const initialDraft: RowDraft = {
   stitchId: "single-crochet",
   widthMode: "stitch-count",
@@ -55,6 +57,16 @@ const initialDraft: RowDraft = {
   repeatCount: "1",
   hex: "#5f7f7a",
 };
+
+const projectTypeOptions: Array<{ id: ProjectType; name: string }> = [
+  { id: "blanket", name: "Blanket" },
+  { id: "pillow-cover", name: "Pillow cover" },
+  { id: "purse", name: "Purse" },
+  { id: "shirt", name: "Shirt" },
+  { id: "pants", name: "Pants" },
+];
+
+const readablePatternTypes = new Set(["text/plain", "text/markdown", "application/json"]);
 
 function colorIdForHex(project: CrochetProject, hex: string, createId: (prefix: string) => string) {
   const normalizedHex = hex.toLowerCase();
@@ -270,13 +282,16 @@ function DraftFields({ draft, onChange, idPrefix, estimate }: DraftFieldsProps) 
 export function FreestyleEditor() {
   const createId = useRef(createIdFactory());
   const [project, setProject] = useState(() => createFreestyleProject());
+  const [setupComplete, setSetupComplete] = useState(false);
+  const [projectType, setProjectType] = useState<ProjectType>("blanket");
   const [activeObjectId, setActiveObjectId] = useState("object-main-panel");
   const [selectedRowId, setSelectedRowId] = useState("");
   const [addDraft, setAddDraft] = useState<RowDraft>(initialDraft);
   const [selectedDraft, setSelectedDraft] = useState<RowDraft>(initialDraft);
   const [addErrors, setAddErrors] = useState<string[]>([]);
   const [selectedErrors, setSelectedErrors] = useState<string[]>([]);
-  const [rotation, setRotation] = useState({ x: 0, y: -18, z: 0 });
+  const [uploadMessage, setUploadMessage] = useState("");
+  const [rotation, setRotation] = useState({ x: 0, y: 0, z: 0 });
   const [joinTargetId, setJoinTargetId] = useState("");
   const [joinMethod, setJoinMethod] = useState<PanelJoinMethod>("seamed");
 
@@ -284,17 +299,10 @@ export function FreestyleEditor() {
   const selectedObject = selectedRowId ? findObjectContainingRow(project, selectedRowId) : undefined;
   const selectedRow = selectedObject?.rows.find((row) => row.id === selectedRowId);
   const svgModel = useMemo(() => createSvgWorkspaceModel(project, selectedRowId), [project, selectedRowId]);
-  const instructionGroups = useMemo(
-    () =>
-      project.objects.map((projectObject) => ({
-        object: projectObject,
-        instructions: generatePatternInstructions(projectObject.rows, project.colors),
-      })),
-    [project.objects, project.colors],
-  );
   const totalRows = project.objects.reduce((count, projectObject) => count + projectObject.rows.length, 0);
   const constructionMode = project.constructionMode ?? "flat-panel";
   const panelJoins = project.panelJoins ?? [];
+  const uploadedPatterns = project.uploadedPatterns ?? [];
   const joinTargets = project.objects.filter((candidate) => candidate.id !== object?.id);
   const activeSquare = object?.type === "granny-square" ? object : null;
   const activeSquareColor = activeSquare
@@ -306,6 +314,61 @@ export function FreestyleEditor() {
       const yarnSetup = updater(current.yarnSetup);
       return calculateProjectEstimate({ ...current, yarnSetup });
     });
+  }
+
+  function patternStatusLabel(pattern: UploadedPatternSource) {
+    return pattern.status === "text-ready" ? "Ready to parse later" : "Saved for PDF parser";
+  }
+
+  function uploadPatternFile(file: File) {
+    const isTextPattern =
+      readablePatternTypes.has(file.type) || /\.(txt|md|markdown|json|csv)$/i.test(file.name);
+    const uploadedAt = new Date().toISOString();
+
+    if (!isTextPattern) {
+      setProject((current) =>
+        addUploadedPatternSource(current, {
+          id: createId.current("pattern"),
+          fileName: file.name,
+          fileType: file.type || "application/octet-stream",
+          fileSizeBytes: file.size,
+          uploadedAt,
+          status: "metadata-only",
+        }),
+      );
+      setUploadMessage(`${file.name} added. PDF/text extraction will come with the import parser.`);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      setProject((current) =>
+        addUploadedPatternSource(current, {
+          id: createId.current("pattern"),
+          fileName: file.name,
+          fileType: file.type || "text/plain",
+          fileSizeBytes: file.size,
+          uploadedAt,
+          sourceText: String(reader.result ?? ""),
+          status: "text-ready",
+        }),
+      );
+      setUploadMessage(`${file.name} added as editable source text.`);
+    });
+    reader.addEventListener("error", () => {
+      setUploadMessage(`Could not read ${file.name}.`);
+    });
+    reader.readAsText(file);
+  }
+
+  function handlePatternUpload(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) {
+      return;
+    }
+
+    uploadPatternFile(file);
   }
 
   function selectRow(rowId: string) {
@@ -491,24 +554,129 @@ export function FreestyleEditor() {
   const selectedEstimate = estimateText(selectedDraft, project.yarnSetup);
   const selectedDefinition = selectedRow ? getStitchDefinition(selectedRow.stitchId) : null;
 
+  if (!setupComplete) {
+    return (
+      <section className="workspace-panel freestyle-builder setup-panel" aria-labelledby="freestyle-title">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Start designing</p>
+            <h2 id="freestyle-title">Whatcha makin?</h2>
+          </div>
+          <p>Pick the project shape and tools first. The canvas opens after setup.</p>
+        </div>
+
+        <div className="setup-grid">
+          <section className="builder-form setup-card" aria-label="Project setup">
+            <fieldset>
+              <legend>Whatcha makin?</legend>
+              <label>
+                Project type
+                <select value={projectType} onChange={(event) => setProjectType(event.target.value as ProjectType)}>
+                  {projectTypeOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </fieldset>
+
+            <fieldset>
+              <legend>What tools are you using?</legend>
+              <label>
+                Yarn weight
+                <select
+                  value={project.yarnSetup.yarnWeightId}
+                  onChange={(event) =>
+                    updateYarnSetup((setup) => ({
+                      ...setup,
+                      yarnWeightId: event.target.value,
+                      yarnWeightName: yarnWeightName(event.target.value),
+                    }))
+                  }
+                >
+                  {yarnWeightOptions.map((option) => (
+                    <option key={option.id} value={option.id}>
+                      {option.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Hook size mm
+                <input
+                  type="number"
+                  min="0.5"
+                  step="0.25"
+                  value={project.yarnSetup.hookSizeMm}
+                  onChange={(event) =>
+                    updateYarnSetup((setup) => ({
+                      ...setup,
+                      hookSizeMm: Number(event.target.value),
+                    }))
+                  }
+                />
+              </label>
+            </fieldset>
+
+            <fieldset>
+              <legend>Upload your own pattern</legend>
+              <label>
+                Pattern file
+                <input
+                  type="file"
+                  accept=".txt,.md,.markdown,.json,.csv,.pdf,text/plain,text/markdown,application/json,application/pdf"
+                  onChange={handlePatternUpload}
+                />
+              </label>
+              {uploadMessage ? <p className="estimate-note">{uploadMessage}</p> : null}
+            </fieldset>
+
+            <button className="button primary dark-button" type="button" onClick={() => setSetupComplete(true)}>
+              Open canvas
+            </button>
+          </section>
+
+          <section className="setup-preview" aria-label="Setup preview">
+            <h3>{projectTypeOptions.find((option) => option.id === projectType)?.name}</h3>
+            <p>
+              {project.yarnSetup.yarnWeightName} yarn with a {project.yarnSetup.hookSizeMm} mm hook.
+            </p>
+            <span>Starter templates coming next</span>
+          </section>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="workspace-panel freestyle-builder svg-editor" aria-labelledby="freestyle-title">
       <div className="section-heading">
         <div>
-          <p className="eyebrow">Interactive freestyle workspace</p>
-          <h2 id="freestyle-title">Build the project visually, row by row</h2>
+          <p className="eyebrow">Interactive design canvas</p>
+          <h2 id="freestyle-title">{projectTypeOptions.find((option) => option.id === projectType)?.name} workspace</h2>
         </div>
         <p>
-          {totalRows} SVG rows | {project.objects.length} panel{project.objects.length === 1 ? "" : "s"} |{" "}
+          {totalRows} SVG rows | {project.objects.length} piece{project.objects.length === 1 ? "" : "s"} |{" "}
           {constructionModeLabel(constructionMode)}
         </p>
       </div>
 
       <div className="freestyle-grid svg-editor-grid">
-        <section className="builder-form row-builder-form" aria-label="Add row controls">
-          <h3>Add row</h3>
+        <section className="builder-form row-builder-form toolbox-panel" aria-label="Build toolbox">
+          <h3>Build toolbox</h3>
           <fieldset>
-            <legend>Project setup</legend>
+            <legend>Project</legend>
+            <label>
+              Whatcha makin?
+              <select value={projectType} onChange={(event) => setProjectType(event.target.value as ProjectType)}>
+                {projectTypeOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.name}
+                  </option>
+                ))}
+              </select>
+            </label>
             <label>
               Construction
               <select
@@ -521,7 +689,7 @@ export function FreestyleEditor() {
               </select>
             </label>
             <label>
-              Active panel
+              Active piece
               <select value={object?.id ?? ""} onChange={(event) => selectPanel(event.target.value)}>
                 {project.objects.map((projectObject) => (
                   <option key={projectObject.id} value={projectObject.id}>
@@ -548,6 +716,31 @@ export function FreestyleEditor() {
                 Duplicate square
               </button>
             </div>
+          </fieldset>
+          <fieldset>
+            <legend>Import pattern</legend>
+            <label>
+              Upload file
+              <input
+                type="file"
+                accept=".txt,.md,.markdown,.json,.csv,.pdf,text/plain,text/markdown,application/json,application/pdf"
+                onChange={handlePatternUpload}
+              />
+            </label>
+            {uploadMessage ? <p className="estimate-note">{uploadMessage}</p> : null}
+            {uploadedPatterns.length ? (
+              <ul className="uploaded-pattern-list">
+                {uploadedPatterns.map((pattern) => (
+                  <li key={pattern.id}>
+                    <strong>{pattern.fileName}</strong>
+                    <span>{patternStatusLabel(pattern)}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </fieldset>
+          <fieldset>
+            <legend>Tools</legend>
             <label>
               Yarn weight
               <select
@@ -585,7 +778,7 @@ export function FreestyleEditor() {
           </fieldset>
 
           <fieldset>
-            <legend>Row details for {object?.name ?? "panel"}</legend>
+            <legend>Add stitches to {object?.name ?? "piece"}</legend>
             <DraftFields draft={addDraft} onChange={setAddDraft} idPrefix="add-row" estimate={addEstimate} />
           </fieldset>
 
@@ -656,7 +849,7 @@ export function FreestyleEditor() {
           </div>
         </section>
 
-        <aside className="freestyle-output" aria-label="Selected object properties and instructions">
+        <aside className="freestyle-output toolbox-panel" aria-label="Properties toolbox">
           <section className="simulation-card selected-properties" aria-label="Selected row properties">
             <h2>Selected row</h2>
             <p>
@@ -851,25 +1044,8 @@ export function FreestyleEditor() {
           </section>
 
           <section className="simulation-card" aria-label="Generated pattern instructions">
-            <h2>Written instructions</h2>
-            {instructionGroups.some((group) => group.instructions.length) ? (
-              instructionGroups.map((group) =>
-                group.instructions.length ? (
-                  <div key={group.object.id} className="instruction-group">
-                    <h3>{group.object.name}</h3>
-                    <ol className="instruction-preview">
-                      {group.instructions.map((instruction) => (
-                        <li key={instruction.id}>{instruction.text}</li>
-                      ))}
-                    </ol>
-                  </div>
-                ) : null,
-              )
-            ) : (
-              <ol className="instruction-preview">
-                <li className="empty-state">Written instructions will appear as SVG rows are added.</li>
-              </ol>
-            )}
+            <h2>Written pattern</h2>
+            <p className="premium-note">Printable written instructions will be a premium export feature.</p>
           </section>
 
           <section className="simulation-card premium-export" aria-label="Premium PDF export">
