@@ -184,6 +184,188 @@
   box-shadow: inset 4px 0 0 rgba(62, 109, 104, 0.72);
 }
 
+.floating-canvas-editor {
+  position: relative;
+  display: grid;
+  height: calc(100vh - 96px);
+  min-height: 720px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.floating-canvas-editor .section-heading {
+  position: absolute;
+  z-index: 4;
+  top: 18px;
+  left: 18px;
+  right: 18px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+  pointer-events: none;
+}
+
+.floating-canvas-editor .section-heading > * {
+  max-width: min(560px, 48vw);
+  padding: 12px 14px;
+  border: 1px solid rgba(58, 46, 40, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 250, 243, 0.82);
+  box-shadow: 0 18px 40px rgba(34, 25, 20, 0.12);
+  backdrop-filter: blur(10px);
+  pointer-events: auto;
+}
+
+.floating-canvas-editor .section-heading p {
+  margin: 0;
+}
+
+.floating-canvas-layout {
+  position: relative;
+  display: block;
+  height: calc(100vh - 96px);
+  min-height: 720px;
+}
+
+.floating-canvas-layout .svg-workspace-shell {
+  height: 100%;
+  min-height: 720px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: #f8f8f5;
+}
+
+.floating-canvas-layout .svg-stage {
+  min-height: 0;
+  padding-bottom: 310px;
+}
+
+.floating-canvas-layout .workspace-toolbar {
+  position: absolute;
+  z-index: 5;
+  top: 118px;
+  right: 18px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid rgba(58, 46, 40, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 250, 243, 0.86);
+  box-shadow: 0 18px 40px rgba(34, 25, 20, 0.12);
+  backdrop-filter: blur(10px);
+}
+
+.floating-canvas-layout .workspace-toolbar button {
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 1px solid rgba(58, 46, 40, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.74);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.floating-canvas-layout .rotation-controls {
+  position: fixed;
+  z-index: 5;
+  right: 18px;
+  bottom: 276px;
+  width: min(560px, calc(100vw - 36px));
+  border: 1px solid rgba(58, 46, 40, 0.12);
+  border-radius: 8px;
+  box-shadow: 0 18px 40px rgba(34, 25, 20, 0.12);
+  backdrop-filter: blur(10px);
+}
+
+.floating-canvas-layout .toolbox-panel,
+.floating-canvas-layout .freestyle-output {
+  position: fixed;
+  z-index: 6;
+  top: auto;
+  left: 18px;
+  right: 18px;
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 12px;
+  border: 1px solid rgba(58, 46, 40, 0.13);
+  border-radius: 8px;
+  background: rgba(255, 250, 243, 0.9);
+  box-shadow: 0 22px 48px rgba(34, 25, 20, 0.18);
+  backdrop-filter: blur(12px);
+  scrollbar-width: thin;
+}
+
+.floating-canvas-layout .toolbox-panel {
+  top: auto;
+  bottom: 18px;
+  height: 240px;
+  box-sizing: border-box;
+}
+
+.floating-canvas-layout .row-builder-form.toolbox-panel {
+  right: auto;
+  width: min(720px, calc(52vw - 24px));
+}
+
+.floating-canvas-layout .freestyle-output {
+  top: auto;
+  bottom: 18px;
+  height: 240px;
+  box-sizing: border-box;
+}
+
+.floating-canvas-layout .toolbox-panel > h3 {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  flex: 0 0 118px;
+  align-self: stretch;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  border-right: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 950;
+  text-align: center;
+  text-transform: uppercase;
+  background: rgba(255, 250, 243, 0.94);
+}
+
+.floating-canvas-layout .toolbox-panel fieldset,
+.floating-canvas-layout .freestyle-output > section {
+  flex: 0 0 min(360px, 82vw);
+  min-width: 260px;
+  max-height: 210px;
+  overflow: auto;
+}
+
+.floating-canvas-layout .toolbox-panel .technique-groups {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.floating-canvas-layout .toolbox-panel .technique-group {
+  flex: 0 0 280px;
+}
+
+.floating-canvas-layout .freestyle-output {
+  left: auto;
+  width: min(820px, calc(48vw - 24px));
+}
+
 .setup-panel {
   max-width: 1180px;
   margin-left: auto;
@@ -511,9 +693,18 @@
     grid-template-columns: minmax(240px, 0.8fr) minmax(460px, 1.4fr);
   }
 
+  .floating-canvas-layout {
+    grid-template-columns: 1fr;
+  }
+
   .freestyle-output {
     grid-column: 1 / -1;
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .floating-canvas-layout .freestyle-output {
+    grid-column: auto;
+    grid-template-columns: none;
   }
 }
 
@@ -530,6 +721,80 @@
 
   .svg-workspace-shell {
     grid-template-rows: auto minmax(460px, 58vh) auto;
+  }
+
+  .floating-canvas-editor {
+    height: calc(100vh - 72px);
+    min-height: 780px;
+  }
+
+  .floating-canvas-editor .section-heading {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    display: grid;
+  }
+
+  .floating-canvas-editor .section-heading > * {
+    max-width: none;
+    padding: 10px 12px;
+  }
+
+  .floating-canvas-layout {
+    height: calc(100vh - 72px);
+    min-height: 780px;
+  }
+
+  .floating-canvas-layout .svg-workspace-shell {
+    height: 100%;
+    min-height: 780px;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+  }
+
+  .floating-canvas-layout .svg-stage {
+    padding-bottom: 560px;
+  }
+
+  .floating-canvas-layout .workspace-toolbar {
+    top: 150px;
+    left: 10px;
+    right: 10px;
+    justify-content: space-between;
+  }
+
+  .floating-canvas-layout .rotation-controls {
+    left: 10px;
+    right: 10px;
+    bottom: 326px;
+    width: auto;
+  }
+
+  .floating-canvas-layout .toolbox-panel,
+  .floating-canvas-layout .freestyle-output {
+    left: 10px;
+    right: 10px;
+    padding: 10px;
+  }
+
+  .floating-canvas-layout .toolbox-panel {
+    bottom: 10px;
+    height: 300px;
+  }
+
+  .floating-canvas-layout .row-builder-form.toolbox-panel {
+    right: 10px;
+    width: auto;
+  }
+
+  .floating-canvas-layout .freestyle-output {
+    bottom: 412px;
+    width: auto;
+    height: 260px;
+  }
+
+  .floating-canvas-layout .toolbox-panel > h3 {
+    flex-basis: 92px;
+    font-size: 0.75rem;
   }
 
   .premium-export {

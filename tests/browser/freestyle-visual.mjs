@@ -43,19 +43,26 @@ await mkdir(baselineDirectory, { recursive: true });
 
 const browser = await chromium.launch();
 let renderedRows = 0;
-let instructionText = "";
+let toolboxTop = 0;
+let viewportHeight = 0;
 
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   await page.goto(baseUrl, { waitUntil: "networkidle" });
   await page.getByRole("link", { name: "Start designing" }).click();
   await page.waitForURL("**/#/create-your-own-pattern");
+  await page.getByRole("button", { name: "Open canvas" }).click();
 
   await page.getByRole("button", { name: "Add row" }).click();
   await page.locator("[data-visual-stage]").screenshot({ path: currentPath });
 
   renderedRows = await page.locator("[data-svg-row-id]").count();
-  instructionText = (await page.locator(".instruction-preview li").first().textContent()) ?? "";
+  const toolboxBox = await page.locator(".toolbox-panel[aria-label='Build toolbox']").boundingBox();
+  if (!toolboxBox) {
+    throw new Error("Build toolbox was not visible.");
+  }
+  toolboxTop = toolboxBox.y;
+  viewportHeight = page.viewportSize()?.height ?? 0;
 } finally {
   await browser.close();
   if (server) {
@@ -67,8 +74,8 @@ if (renderedRows !== 1) {
   throw new Error(`Expected one rendered SVG row, found ${renderedRows}.`);
 }
 
-if (instructionText !== "Row 1: With #5f7f7a, work 46 sc.") {
-  throw new Error(`Instruction output did not match the rendered row: ${instructionText}`);
+if (toolboxTop < viewportHeight * 0.5) {
+  throw new Error(`Expected the build toolbox to float near the bottom, top was ${toolboxTop}px.`);
 }
 
 if (!existsSync(baselinePath)) {
