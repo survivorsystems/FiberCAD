@@ -6,7 +6,7 @@ export function HomePage() {
       <main className="hero">
         <section className="hero-copy" aria-labelledby="hero-title">
           <p className="eyebrow">Crochet charts, symbols, and finished previews</p>
-          <h1 id="hero-title">Design crochet patterns you can see before you stitch.</h1>
+          <h1 id="hero-title">Welcome to FiberCAD! The first project builder for fiber artists</h1>
           <p>
             Build charts with real stitch symbols, shape colorwork row by row, and preview how
             your Tunisian-inspired ideas could become finished fiber art.
