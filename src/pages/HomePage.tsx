@@ -12,10 +12,10 @@ export function HomePage() {
             your Tunisian-inspired ideas could become finished fiber art.
           </p>
           <div className="hero-actions" aria-label="Main actions">
-            <a className="button primary" href="/#/create-your-own-pattern">
+            <a className="button primary" href="#/create-your-own-pattern">
               Start designing
             </a>
-            <a className="button secondary" href="/#/pattern-library">
+            <a className="button secondary" href="#/pattern-library">
               Browse patterns
             </a>
           </div>
