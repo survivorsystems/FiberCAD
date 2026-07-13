@@ -17,6 +17,7 @@ import {
   selectSvgRow,
   updateCrochetRowInObject,
   validateRowInput,
+  updateGrannySquareObject,
 } from "../src/domain/crochetDesigner.ts";
 
 const objectId = "object-main-panel";
@@ -87,7 +88,21 @@ test("SVG workspace model renders a granny square object without row strips", ()
   assert.equal(model.objects.length, 1);
   assert.equal(model.objects[0].id, square.id);
   assert.equal(model.objects[0].type, "granny-square");
+  assert.equal(model.objects[0].colorHex, "#f7ead8");
   assert.equal(model.rows.length, 0);
+});
+
+test("SVG workspace model reflects edited granny square rounds and color", () => {
+  const createId = createIdFactory();
+  let project = createFreestyleProject();
+  const square = createGrannySquareObject(createId, "Motif A", 3, { x: 1, y: 0, layer: 1 });
+  project = addCrochetObject(project, square);
+  const small = createSvgWorkspaceModel(project).objects[0];
+  project = updateGrannySquareObject(project, square.id, { rounds: 6, colorId: "color-rose" });
+  const large = createSvgWorkspaceModel(project).objects[0];
+
+  assert.equal(large.width > small.width, true);
+  assert.equal(large.colorHex, "#9f5f5d");
 });
 
 test("row width changes when stitch count changes", () => {

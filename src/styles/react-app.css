@@ -43,9 +43,9 @@
 }
 
 .svg-object-granny-square .svg-object-frame {
-  fill: rgba(247, 234, 216, 0.42);
   stroke: rgba(62, 109, 104, 0.5);
   stroke-dasharray: none;
+  fill-opacity: 0.42;
 }
 
 .svg-square-round {

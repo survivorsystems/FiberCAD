@@ -124,6 +124,7 @@ export function CrochetWorkspaceSvg({
                 width={object.width}
                 height={object.height}
                 rx={object.type === "granny-square" ? "0.06" : "0.1"}
+                fill={object.type === "granny-square" ? object.colorHex : undefined}
               />
               {object.type === "granny-square" ? (
                 <>

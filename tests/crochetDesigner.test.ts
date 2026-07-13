@@ -28,6 +28,7 @@ import {
   setProjectConstructionMode,
   updateCrochetObject,
   updateCrochetRowInObject,
+  updateGrannySquareObject,
   validateRowInput,
   validateYarnSetup,
 } from "../src/domain/crochetDesigner.ts";
@@ -172,6 +173,28 @@ test("estimates granny square size from round count and gauge", () => {
   const large = estimateGrannySquareSize(6, defaultYarnSetup);
 
   assert.equal(large > small, true);
+});
+
+test("updates granny square properties and recalculates dimensions", () => {
+  const createId = createIdFactory();
+  const square = createGrannySquareObject(createId, "Original square", 3, { x: 1, y: 0, layer: 1 });
+  const withSquare = addCrochetObject(project(), square);
+  const updated = updateGrannySquareObject(withSquare, square.id, {
+    name: "Edited square",
+    rounds: 6,
+    motifRepeatCount: 4,
+    colorId: "color-rose",
+  });
+  const updatedSquare = updated.objects[1];
+
+  assert.equal(updatedSquare.type, "granny-square");
+  if (updatedSquare.type === "granny-square") {
+    assert.equal(updatedSquare.name, "Edited square");
+    assert.equal(updatedSquare.rounds, 6);
+    assert.equal(updatedSquare.motifRepeatCount, 4);
+    assert.equal(updatedSquare.colorId, "color-rose");
+  }
+  assert.equal(updatedSquare.estimatedPhysicalWidth > withSquare.objects[1].estimatedPhysicalWidth, true);
 });
 
 test("converts consecutive identical rows into a repeated section", () => {

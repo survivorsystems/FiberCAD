@@ -100,6 +100,7 @@ export type GrannySquare = CrochetObjectBase & {
   type: "granny-square";
   rounds: number;
   motifRepeatCount?: number;
+  colorId?: string;
 };
 
 export type Border = CrochetObjectBase & {
@@ -197,6 +198,7 @@ export type SvgObjectRenderModel = {
   y: number;
   width: number;
   height: number;
+  colorHex: string;
   selected: boolean;
 };
 
@@ -359,6 +361,7 @@ export function createGrannySquareObject(
   name = "Granny square",
   rounds = 4,
   position: CrochetObjectPosition = { x: 0, y: 0, layer: 0 },
+  colorId = "color-cream",
 ): GrannySquare {
   return {
     id: createId("object"),
@@ -367,6 +370,8 @@ export function createGrannySquareObject(
     position,
     rows: [],
     rounds: Math.max(1, Math.round(rounds)),
+    motifRepeatCount: 1,
+    colorId,
     estimatedPhysicalWidth: 0,
     estimatedPhysicalHeight: 0,
   };
@@ -627,6 +632,30 @@ export function setProjectConstructionMode(
     ...project,
     constructionMode,
   };
+}
+
+export function updateGrannySquareObject(
+  project: CrochetProject,
+  objectId: string,
+  updates: Partial<Pick<GrannySquare, "name" | "rounds" | "motifRepeatCount" | "colorId">>,
+  stitchDefinitions: StitchDefinition[] = seedStitchDefinitions,
+): CrochetProject {
+  return updateCrochetObject(project, objectId, (object) => {
+    if (object.type !== "granny-square") {
+      return object;
+    }
+
+    return calculateObjectEstimate(
+      {
+        ...object,
+        ...updates,
+        rounds: Math.max(1, Math.round(updates.rounds ?? object.rounds)),
+        motifRepeatCount: Math.max(1, Math.round(updates.motifRepeatCount ?? object.motifRepeatCount ?? 1)),
+      },
+      project.yarnSetup,
+      stitchDefinitions,
+    ) as GrannySquare;
+  });
 }
 
 export function joinCrochetPanels(
@@ -914,6 +943,10 @@ export function createSvgWorkspaceModel(
         y: padding,
         width: objectWidth,
         height: objectHeight,
+        colorHex:
+          object.type === "granny-square"
+            ? project.colors.find((color) => color.id === object.colorId)?.hex ?? "#f7ead8"
+            : "#ffffff",
         selected: object.rows.some((row) => row.id === selectedRowId),
       });
     }

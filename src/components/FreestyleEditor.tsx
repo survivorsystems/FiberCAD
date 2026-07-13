@@ -5,6 +5,7 @@ import {
   type CrochetProject,
   type CrochetRow,
   type CrochetRowInput,
+  type GrannySquare,
   type PanelJoinMethod,
   type YarnSetup,
   addCrochetObject,
@@ -30,6 +31,7 @@ import {
   selectSvgRow,
   setProjectConstructionMode,
   updateCrochetRowInObject,
+  updateGrannySquareObject,
   validateRowInput,
   yarnWeightOptions,
 } from "../domain/crochetDesigner";
@@ -294,6 +296,10 @@ export function FreestyleEditor() {
   const constructionMode = project.constructionMode ?? "flat-panel";
   const panelJoins = project.panelJoins ?? [];
   const joinTargets = project.objects.filter((candidate) => candidate.id !== object?.id);
+  const activeSquare = object?.type === "granny-square" ? object : null;
+  const activeSquareColor = activeSquare
+    ? project.colors.find((color) => color.id === activeSquare.colorId)?.hex ?? "#f7ead8"
+    : "#f7ead8";
 
   function updateYarnSetup(updater: (setup: YarnSetup) => YarnSetup) {
     setProject((current) => {
@@ -365,6 +371,23 @@ export function FreestyleEditor() {
     setProject(nextProject);
     setActiveObjectId(duplicate.id);
     setSelectedRowId("");
+  }
+
+  function updateActiveSquare(updates: Partial<Pick<GrannySquare, "name" | "rounds" | "motifRepeatCount" | "colorId">>) {
+    if (!activeSquare) {
+      return;
+    }
+
+    setProject((current) => updateGrannySquareObject(current, activeSquare.id, updates));
+  }
+
+  function updateActiveSquareColor(hex: string) {
+    if (!activeSquare || !isValidHexColor(hex)) {
+      return;
+    }
+
+    const colorResult = colorIdForHex(project, hex, createId.current);
+    setProject(updateGrannySquareObject(colorResult.project, activeSquare.id, { colorId: colorResult.colorId }));
   }
 
   function updateConstructionMode(mode: ConstructionMode) {
@@ -673,6 +696,63 @@ export function FreestyleEditor() {
               </div>
             ) : null}
           </section>
+
+          {activeSquare ? (
+            <section className="simulation-card selected-properties" aria-label="Active granny square properties">
+              <h2>Active square</h2>
+              <div className="builder-form selected-form">
+                <label>
+                  Square name
+                  <input
+                    type="text"
+                    value={activeSquare.name}
+                    onChange={(event) => updateActiveSquare({ name: event.target.value })}
+                  />
+                </label>
+                <label>
+                  Rounds
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={activeSquare.rounds}
+                    onChange={(event) => updateActiveSquare({ rounds: Number(event.target.value) })}
+                  />
+                </label>
+                <label>
+                  Motif repeat count
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={activeSquare.motifRepeatCount ?? 1}
+                    onChange={(event) => updateActiveSquare({ motifRepeatCount: Number(event.target.value) })}
+                  />
+                </label>
+                <div className="color-input-row">
+                  <label>
+                    Square color
+                    <input
+                      type="color"
+                      value={activeSquareColor}
+                      onChange={(event) => updateActiveSquareColor(event.target.value)}
+                    />
+                  </label>
+                  <label>
+                    Estimated size
+                    <input
+                      type="text"
+                      readOnly
+                      value={`${activeSquare.estimatedPhysicalWidth.toFixed(1)} in square`}
+                    />
+                  </label>
+                </div>
+                <button className="button secondary light-button" type="button" onClick={duplicateActiveSquare}>
+                  Duplicate square
+                </button>
+              </div>
+            </section>
+          ) : null}
 
           <section className="simulation-card compact-navigator" aria-label="Compact object navigator">
             <h2>Project pieces</h2>
