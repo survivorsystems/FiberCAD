@@ -239,7 +239,7 @@ h1 {
 
 .page-main {
   width: min(1680px, calc(100% - 32px));
-  margin: 32px auto 56px;
+  margin: 16px auto 40px;
 }
 
 .page-title {
@@ -703,6 +703,77 @@ h1 {
   gap: 12px;
 }
 
+.floating-canvas-editor {
+  width: min(1920px, calc(100vw - 16px));
+  height: calc(100vh - 112px);
+  min-height: 760px;
+  margin-top: 8px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  position: relative;
+}
+
+.floating-canvas-editor .section-heading {
+  position: absolute;
+  z-index: 6;
+  top: 14px;
+  left: 50%;
+  width: min(560px, calc(100% - 760px));
+  min-width: 320px;
+  transform: translateX(-50%);
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 250, 243, 0.82);
+  backdrop-filter: blur(14px);
+}
+
+.floating-canvas-editor .section-heading h2 {
+  font-size: clamp(1.15rem, 2vw, 1.55rem);
+}
+
+.floating-canvas-editor .section-heading .eyebrow,
+.floating-canvas-editor .section-heading > p {
+  display: none;
+}
+
+.floating-canvas-layout {
+  display: block;
+  height: 100%;
+}
+
+.floating-canvas-editor .svg-workspace-shell {
+  position: absolute;
+  inset: 0;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  border-radius: 8px;
+}
+
+.floating-canvas-editor .row-builder-form,
+.floating-canvas-editor .freestyle-output {
+  position: absolute;
+  z-index: 7;
+  top: 76px;
+  bottom: 16px;
+  width: min(370px, 28vw);
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 250, 243, 0.84);
+  box-shadow: 0 18px 54px rgba(56, 39, 28, 0.16);
+  backdrop-filter: blur(16px);
+}
+
+.floating-canvas-editor .row-builder-form {
+  left: 16px;
+}
+
+.floating-canvas-editor .freestyle-output {
+  right: 16px;
+}
+
 .row-builder-form {
   position: sticky;
   top: 18px;
@@ -1061,6 +1132,30 @@ h1 {
   .section-heading,
   .freestyle-grid {
     grid-template-columns: 1fr;
+  }
+
+  .floating-canvas-editor {
+    height: auto;
+    min-height: 0;
+  }
+
+  .floating-canvas-editor .section-heading,
+  .floating-canvas-editor .row-builder-form,
+  .floating-canvas-editor .freestyle-output,
+  .floating-canvas-editor .svg-workspace-shell {
+    position: static;
+    width: auto;
+    transform: none;
+  }
+
+  .floating-canvas-editor .section-heading {
+    display: grid;
+  }
+
+  .floating-canvas-layout {
+    display: grid;
+    gap: 12px;
+    height: auto;
   }
 
   .section-heading {

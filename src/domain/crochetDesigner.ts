@@ -63,6 +63,29 @@ export type StitchDefinition = {
   dimensionEstimates: StitchDimensionEstimate[];
 };
 
+export type CrochetTechniqueCategory =
+  | "basic-stitches"
+  | "shaping"
+  | "working-in-rounds"
+  | "texture-specialty"
+  | "colorwork-finishing"
+  | "edging-finishing";
+
+export type CrochetTechnique = {
+  id: string;
+  name: string;
+  abbreviation?: string;
+  category: CrochetTechniqueCategory;
+  stitchId?: string;
+  description: string;
+};
+
+export type CrochetTechniqueGroup = {
+  id: CrochetTechniqueCategory;
+  name: string;
+  techniques: CrochetTechnique[];
+};
+
 export type CrochetRow = {
   id: string;
   stitchId: string;
@@ -253,6 +276,34 @@ export const defaultYarnSetup: YarnSetup = {
 
 export const seedStitchDefinitions: StitchDefinition[] = [
   {
+    id: "chain-stitch",
+    name: "Chain stitch",
+    abbreviation: "ch",
+    category: "basic",
+    baseStitchMultiple: 1,
+    extraFoundationChains: 0,
+    turningChain: 0,
+    turningChainCountsAsStitch: false,
+    fabricDensity: "open",
+    dimensionEstimates: [
+      { yarnWeightId: "medium", recommendedHookMm: 5, stitchWidthIn: 4 / 18, rowHeightIn: 4 / 24 },
+    ],
+  },
+  {
+    id: "slip-stitch",
+    name: "Slip stitch",
+    abbreviation: "sl st",
+    category: "basic",
+    baseStitchMultiple: 1,
+    extraFoundationChains: 0,
+    turningChain: 0,
+    turningChainCountsAsStitch: false,
+    fabricDensity: "dense",
+    dimensionEstimates: [
+      { yarnWeightId: "medium", recommendedHookMm: 5, stitchWidthIn: 4 / 17, rowHeightIn: 4 / 26 },
+    ],
+  },
+  {
     id: "single-crochet",
     name: "Single crochet",
     abbreviation: "sc",
@@ -295,6 +346,34 @@ export const seedStitchDefinitions: StitchDefinition[] = [
     ],
   },
   {
+    id: "treble-crochet",
+    name: "Treble crochet",
+    abbreviation: "tr",
+    category: "basic",
+    baseStitchMultiple: 1,
+    extraFoundationChains: 4,
+    turningChain: 4,
+    turningChainCountsAsStitch: "pattern-dependent",
+    fabricDensity: "open",
+    dimensionEstimates: [
+      { yarnWeightId: "medium", recommendedHookMm: 5.5, stitchWidthIn: 4 / 11.5, rowHeightIn: 4 / 6.5 },
+    ],
+  },
+  {
+    id: "double-treble-crochet",
+    name: "Double treble crochet",
+    abbreviation: "dtr",
+    category: "basic",
+    baseStitchMultiple: 1,
+    extraFoundationChains: 5,
+    turningChain: 5,
+    turningChainCountsAsStitch: "pattern-dependent",
+    fabricDensity: "open",
+    dimensionEstimates: [
+      { yarnWeightId: "medium", recommendedHookMm: 5.5, stitchWidthIn: 4 / 11, rowHeightIn: 4 / 5.5 },
+    ],
+  },
+  {
     id: "tunisian-simple-stitch",
     name: "Tunisian simple stitch",
     abbreviation: "tss",
@@ -320,6 +399,189 @@ export const seedStitchDefinitions: StitchDefinition[] = [
     fabricDensity: "dense",
     dimensionEstimates: [
       { yarnWeightId: "medium", recommendedHookMm: 6, stitchWidthIn: 4 / 13, rowHeightIn: 4 / 12 },
+    ],
+  },
+];
+
+export const crochetTechniqueGroups: CrochetTechniqueGroup[] = [
+  {
+    id: "basic-stitches",
+    name: "Basic stitches",
+    techniques: [
+      {
+        id: "tech-chain-stitch",
+        name: "Chain stitch",
+        abbreviation: "ch",
+        category: "basic-stitches",
+        stitchId: "chain-stitch",
+        description: "Foundation chains, chain spaces, and height between stitch groups.",
+      },
+      {
+        id: "tech-slip-stitch",
+        name: "Slip stitch",
+        abbreviation: "sl st",
+        category: "basic-stitches",
+        stitchId: "slip-stitch",
+        description: "Joining, moving position, and finishing edges.",
+      },
+      {
+        id: "tech-single-crochet",
+        name: "Single crochet",
+        abbreviation: "sc",
+        category: "basic-stitches",
+        stitchId: "single-crochet",
+        description: "Dense basic stitch for sturdy fabric.",
+      },
+      {
+        id: "tech-half-double-crochet",
+        name: "Half double crochet",
+        abbreviation: "hdc",
+        category: "basic-stitches",
+        stitchId: "half-double-crochet",
+        description: "Medium-height stitch with flexible drape.",
+      },
+      {
+        id: "tech-double-crochet",
+        name: "Double crochet",
+        abbreviation: "dc",
+        category: "basic-stitches",
+        stitchId: "double-crochet",
+        description: "Tall basic stitch for faster height and open fabric.",
+      },
+      {
+        id: "tech-treble-crochet",
+        name: "Treble/triple crochet",
+        abbreviation: "tr",
+        category: "basic-stitches",
+        stitchId: "treble-crochet",
+        description: "Very tall stitch for lace, height, and openwork.",
+      },
+      {
+        id: "tech-double-treble-crochet",
+        name: "Double treble crochet",
+        abbreviation: "dtr",
+        category: "basic-stitches",
+        stitchId: "double-treble-crochet",
+        description: "Extra-tall stitch for dramatic open height.",
+      },
+    ],
+  },
+  {
+    id: "shaping",
+    name: "Shaping techniques",
+    techniques: [
+      {
+        id: "tech-increase",
+        name: "Increase",
+        category: "shaping",
+        description: "Work two or more stitches into one stitch.",
+      },
+      {
+        id: "tech-decrease",
+        name: "Decrease",
+        abbreviation: "sc2tog / dc2tog",
+        category: "shaping",
+        description: "Join multiple stitches into one to reduce stitch count.",
+      },
+      {
+        id: "tech-invisible-decrease",
+        name: "Invisible decrease",
+        category: "shaping",
+        description: "Decrease through front loops only for a cleaner finish.",
+      },
+      {
+        id: "tech-short-rows",
+        name: "Short rows",
+        category: "shaping",
+        description: "Turn before finishing a row to shape fabric.",
+      },
+    ],
+  },
+  {
+    id: "working-in-rounds",
+    name: "Working in rounds",
+    techniques: [
+      {
+        id: "tech-join-round-slip-stitch",
+        name: "Join round with slip stitch",
+        category: "working-in-rounds",
+        description: "Join the end of a round to the first stitch.",
+      },
+      {
+        id: "tech-magic-ring",
+        name: "Magic ring",
+        category: "working-in-rounds",
+        description: "Adjustable ring start for round projects.",
+      },
+      {
+        id: "tech-spiral-rounds",
+        name: "Spiral rounds",
+        category: "working-in-rounds",
+        description: "Work continuously with a marker instead of joining.",
+      },
+      {
+        id: "tech-turning-chain",
+        name: "Turning chain",
+        category: "working-in-rounds",
+        description: "Chain height at turns; may count as a stitch by pattern.",
+      },
+    ],
+  },
+  {
+    id: "texture-specialty",
+    name: "Texture and specialty stitches",
+    techniques: [
+      {
+        id: "tech-front-back-post",
+        name: "Front/back post stitches",
+        abbreviation: "FPdc / BPdc",
+        category: "texture-specialty",
+        description: "Create ribbing, cables, and raised texture.",
+      },
+      { id: "tech-bobble", name: "Bobble stitch", category: "texture-specialty", description: "Raised cluster texture." },
+      { id: "tech-popcorn", name: "Popcorn stitch", category: "texture-specialty", description: "Popped raised stitch group." },
+      { id: "tech-puff", name: "Puff stitch", category: "texture-specialty", description: "Soft gathered texture stitch." },
+      { id: "tech-cluster", name: "Cluster stitch", category: "texture-specialty", description: "Multiple partial stitches closed together." },
+      { id: "tech-shell", name: "Shell stitch", category: "texture-specialty", description: "Fan-like grouped stitches." },
+      { id: "tech-v-stitch", name: "V-stitch", category: "texture-specialty", description: "Open V-shaped stitch pattern." },
+      { id: "tech-picot", name: "Picot stitch", category: "texture-specialty", description: "Small looped edging or lace point." },
+      { id: "tech-crocodile", name: "Crocodile stitch", category: "texture-specialty", description: "Scale-like layered texture." },
+      { id: "tech-bullion", name: "Bullion stitch", category: "texture-specialty", description: "Wrapped raised stitch." },
+      { id: "tech-star", name: "Star stitch", category: "texture-specialty", description: "Starburst textured stitch pattern." },
+      { id: "tech-waffle", name: "Waffle stitch", category: "texture-specialty", description: "Grid-like textured fabric." },
+      { id: "tech-moss-linen", name: "Moss/linen stitch", category: "texture-specialty", description: "Alternating stitches and chains." },
+      {
+        id: "tech-granny-stitch",
+        name: "Granny stitch",
+        category: "texture-specialty",
+        description: "Classic cluster plus chain-space pattern.",
+      },
+    ],
+  },
+  {
+    id: "colorwork-finishing",
+    name: "Colorwork and finishing",
+    techniques: [
+      { id: "tech-changing-colors", name: "Changing colors", category: "colorwork-finishing", description: "Yarn over with new color on last pull-through." },
+      { id: "tech-carrying-yarn", name: "Carrying yarn behind work", category: "colorwork-finishing", description: "Carry colors behind rows for stripes or repeats." },
+      { id: "tech-tapestry-crochet", name: "Tapestry crochet", category: "colorwork-finishing", description: "Colorwork with multiple carried strands." },
+      { id: "tech-surface-crochet", name: "Surface crochet", category: "colorwork-finishing", description: "Slip stitch embroidery on finished fabric." },
+      {
+        id: "tech-seaming",
+        name: "Whip/mattress/slip stitch seaming",
+        category: "colorwork-finishing",
+        description: "Join separate project pieces.",
+      },
+      { id: "tech-weaving-ends", name: "Weaving in ends", category: "colorwork-finishing", description: "Secure yarn tails after color changes or finishing." },
+    ],
+  },
+  {
+    id: "edging-finishing",
+    name: "Edging and finishing",
+    techniques: [
+      { id: "tech-single-crochet-edging", name: "Single crochet edging", category: "edging-finishing", description: "Clean edge worked around a piece." },
+      { id: "tech-crab-stitch", name: "Crab stitch", category: "edging-finishing", description: "Reverse single crochet edging." },
+      { id: "tech-blocking", name: "Blocking", category: "edging-finishing", description: "Shape and set the finished project dimensions." },
     ],
   },
 ];
@@ -932,9 +1194,13 @@ export function generatePatternInstructions(
 
 export function textureIdForStitch(stitchId: string): string {
   const textureIds: Record<string, string> = {
+    "chain-stitch": "texture-chain-stitch",
+    "slip-stitch": "texture-slip-stitch",
     "single-crochet": "texture-single-crochet",
     "half-double-crochet": "texture-half-double-crochet",
     "double-crochet": "texture-double-crochet",
+    "treble-crochet": "texture-treble-crochet",
+    "double-treble-crochet": "texture-double-treble-crochet",
     "tunisian-simple-stitch": "texture-tunisian-simple-stitch",
     "tunisian-knit-stitch": "texture-tunisian-knit-stitch",
   };

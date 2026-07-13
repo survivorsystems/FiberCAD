@@ -5,6 +5,7 @@ import {
   type CrochetProject,
   type CrochetRow,
   type CrochetRowInput,
+  type CrochetTechnique,
   type GrannySquare,
   type PanelJoinMethod,
   type UploadedPatternSource,
@@ -13,6 +14,7 @@ import {
   addCrochetObject,
   addCrochetRowToObject,
   calculateProjectEstimate,
+  crochetTechniqueGroups,
   createGrannySquareObject,
   createRectanglePanelObject,
   createCrochetRow,
@@ -291,6 +293,7 @@ export function FreestyleEditor() {
   const [addErrors, setAddErrors] = useState<string[]>([]);
   const [selectedErrors, setSelectedErrors] = useState<string[]>([]);
   const [uploadMessage, setUploadMessage] = useState("");
+  const [techniqueMessage, setTechniqueMessage] = useState("");
   const [rotation, setRotation] = useState({ x: 0, y: 0, z: 0 });
   const [joinTargetId, setJoinTargetId] = useState("");
   const [joinMethod, setJoinMethod] = useState<PanelJoinMethod>("seamed");
@@ -387,6 +390,16 @@ export function FreestyleEditor() {
     setActiveObjectId(objectId);
     setSelectedRowId("");
     setSelectedErrors([]);
+  }
+
+  function selectTechnique(technique: CrochetTechnique) {
+    if (technique.stitchId) {
+      setAddDraft((draft) => ({ ...draft, stitchId: technique.stitchId ?? draft.stitchId }));
+      setTechniqueMessage(`${technique.name} selected for the next row.`);
+      return;
+    }
+
+    setTechniqueMessage(`${technique.name} is in the toolbox and will get behavior in a later pass.`);
   }
 
   function makePanel() {
@@ -650,7 +663,7 @@ export function FreestyleEditor() {
   }
 
   return (
-    <section className="workspace-panel freestyle-builder svg-editor" aria-labelledby="freestyle-title">
+    <section className="workspace-panel freestyle-builder svg-editor floating-canvas-editor" aria-labelledby="freestyle-title">
       <div className="section-heading">
         <div>
           <p className="eyebrow">Interactive design canvas</p>
@@ -662,7 +675,7 @@ export function FreestyleEditor() {
         </p>
       </div>
 
-      <div className="freestyle-grid svg-editor-grid">
+      <div className="freestyle-grid svg-editor-grid floating-canvas-layout">
         <section className="builder-form row-builder-form toolbox-panel" aria-label="Build toolbox">
           <h3>Build toolbox</h3>
           <fieldset className="primary-toolbox-section">
@@ -680,6 +693,31 @@ export function FreestyleEditor() {
             <button className="button primary dark-button full-width-action" type="button" onClick={addRow}>
               Add row to {object?.name ?? "piece"}
             </button>
+          </fieldset>
+
+          <fieldset>
+            <legend>Technique toolbox</legend>
+            <div className="technique-groups" aria-label="Crochet techniques">
+              {crochetTechniqueGroups.map((group) => (
+                <section className="technique-group" key={group.id} aria-label={`${group.name} techniques`}>
+                  <h4>{group.name}</h4>
+                  <div className="technique-tool-grid">
+                    {group.techniques.map((technique) => (
+                      <button
+                        key={technique.id}
+                        type="button"
+                        className={`technique-tool${technique.stitchId === addDraft.stitchId ? " is-active" : ""}`}
+                        onClick={() => selectTechnique(technique)}
+                      >
+                        <strong>{technique.abbreviation ?? technique.name}</strong>
+                        <span>{technique.abbreviation ? technique.name : technique.description}</span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+            {techniqueMessage ? <p className="estimate-note">{techniqueMessage}</p> : null}
           </fieldset>
 
           <fieldset>

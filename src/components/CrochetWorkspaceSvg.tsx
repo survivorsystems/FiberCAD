@@ -25,7 +25,15 @@ function stitchMarks(row: SvgRowRenderModel) {
     const center = row.x + gap * index + gap / 2;
     const half = Math.min(gap * 0.36, row.height * 0.24);
 
-    if (row.stitchId === "single-crochet") {
+    if (row.stitchId === "chain-stitch") {
+      marks.push(
+        <ellipse key={index} cx={center} cy={mid} rx={half * 0.72} ry={row.height * 0.2} />,
+      );
+    } else if (row.stitchId === "slip-stitch") {
+      marks.push(
+        <path key={index} d={`M ${center - half} ${mid} H ${center + half} M ${center} ${top} V ${bottom}`} />,
+      );
+    } else if (row.stitchId === "single-crochet") {
       marks.push(
         <path
           key={index}
@@ -44,6 +52,13 @@ function stitchMarks(row: SvgRowRenderModel) {
         <path
           key={index}
           d={`M ${center - half * 0.55} ${bottom} L ${center + half * 0.42} ${top} M ${center - half * 0.2} ${top} L ${center + half * 0.58} ${bottom}`}
+        />,
+      );
+    } else if (row.stitchId === "treble-crochet" || row.stitchId === "double-treble-crochet") {
+      marks.push(
+        <path
+          key={index}
+          d={`M ${center - half * 0.62} ${bottom} L ${center + half * 0.42} ${top} M ${center - half * 0.22} ${top} L ${center + half * 0.58} ${bottom} M ${center - half * 0.45} ${mid} H ${center + half * 0.45}`}
         />,
       );
     } else if (row.stitchId === "tunisian-simple-stitch") {

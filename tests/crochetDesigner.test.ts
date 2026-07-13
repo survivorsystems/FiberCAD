@@ -10,6 +10,7 @@ import {
   addUploadedPatternSource,
   calculateObjectEstimate,
   convertConsecutiveIdenticalRowsToRepeatedSections,
+  crochetTechniqueGroups,
   createGrannySquareObject,
   createRectanglePanelObject,
   createCrochetRow,
@@ -89,6 +90,26 @@ test("looks up estimated stitch and row dimensions", () => {
 
   assert.equal(Math.round(dimensions.stitchWidthIn * 1000) / 1000, 0.267);
   assert.equal(dimensions.rowHeightIn, 0.25);
+});
+
+test("includes basic stitch definitions for the visible toolbox", () => {
+  const stitchIds = seedStitchDefinitions.map((definition) => definition.id);
+
+  assert.equal(stitchIds.includes("chain-stitch"), true);
+  assert.equal(stitchIds.includes("slip-stitch"), true);
+  assert.equal(stitchIds.includes("treble-crochet"), true);
+  assert.equal(stitchIds.includes("double-treble-crochet"), true);
+});
+
+test("includes crochet technique groups for the toolbox", () => {
+  const techniqueNames = crochetTechniqueGroups.flatMap((group) =>
+    group.techniques.map((technique) => technique.name),
+  );
+
+  assert.equal(techniqueNames.includes("Magic ring"), true);
+  assert.equal(techniqueNames.includes("Bobble stitch"), true);
+  assert.equal(techniqueNames.includes("Tapestry crochet"), true);
+  assert.equal(techniqueNames.includes("Blocking"), true);
 });
 
 test("calculates an object's estimated physical width and height", () => {
@@ -276,9 +297,11 @@ test("estimates and creates a row from desired physical width", () => {
 });
 
 test("adjusts desired-width stitch estimates to the nearest stitch multiple", () => {
+  const singleCrochet = seedStitchDefinitions.find((definition) => definition.id === "single-crochet");
+  assert.ok(singleCrochet);
   const customStitches: StitchDefinition[] = [
     {
-      ...seedStitchDefinitions[0],
+      ...singleCrochet,
       id: "multiple-four",
       baseStitchMultiple: 4,
     },
