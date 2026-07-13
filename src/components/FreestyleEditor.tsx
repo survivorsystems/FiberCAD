@@ -665,6 +665,23 @@ export function FreestyleEditor() {
       <div className="freestyle-grid svg-editor-grid">
         <section className="builder-form row-builder-form toolbox-panel" aria-label="Build toolbox">
           <h3>Build toolbox</h3>
+          <fieldset className="primary-toolbox-section">
+            <legend>Add row</legend>
+            <DraftFields draft={addDraft} onChange={setAddDraft} idPrefix="add-row" estimate={addEstimate} />
+
+            {addErrors.length > 0 ? (
+              <ul className="form-errors" aria-live="polite">
+                {addErrors.map((error) => (
+                  <li key={error}>{error}</li>
+                ))}
+              </ul>
+            ) : null}
+
+            <button className="button primary dark-button full-width-action" type="button" onClick={addRow}>
+              Add row to {object?.name ?? "piece"}
+            </button>
+          </fieldset>
+
           <fieldset>
             <legend>Project</legend>
             <label>
@@ -776,25 +793,6 @@ export function FreestyleEditor() {
               />
             </label>
           </fieldset>
-
-          <fieldset>
-            <legend>Add stitches to {object?.name ?? "piece"}</legend>
-            <DraftFields draft={addDraft} onChange={setAddDraft} idPrefix="add-row" estimate={addEstimate} />
-          </fieldset>
-
-          {addErrors.length > 0 ? (
-            <ul className="form-errors" aria-live="polite">
-              {addErrors.map((error) => (
-                <li key={error}>{error}</li>
-              ))}
-            </ul>
-          ) : null}
-
-          <div className="form-actions">
-            <button className="button primary dark-button" type="button" onClick={addRow}>
-              Add row
-            </button>
-          </div>
         </section>
 
         <section className="svg-workspace-shell" aria-label="Interactive SVG crochet workspace">
