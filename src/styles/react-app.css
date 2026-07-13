@@ -103,6 +103,81 @@
   gap: 12px;
 }
 
+.full-width-action {
+  width: 100%;
+  justify-content: center;
+}
+
+.panel-tools {
+  display: grid;
+  gap: 12px;
+}
+
+.panel-chip-row {
+  display: grid;
+  gap: 8px;
+}
+
+.panel-chip {
+  display: grid;
+  gap: 3px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid rgba(58, 46, 40, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.56);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.panel-chip.is-active {
+  border-color: rgba(62, 109, 104, 0.52);
+  background: rgba(95, 127, 122, 0.14);
+}
+
+.panel-chip span {
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
+.panel-chip small,
+.panel-join-list,
+.join-panel-controls .empty-state {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.join-panel-controls {
+  display: grid;
+  gap: 9px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.join-panel-controls h3,
+.compact-navigator h3,
+.instruction-group h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.88rem;
+  font-weight: 950;
+}
+
+.panel-join-list {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.instruction-group {
+  display: grid;
+  gap: 7px;
+}
+
 .premium-export {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

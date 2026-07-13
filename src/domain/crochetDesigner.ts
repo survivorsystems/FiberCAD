@@ -1,5 +1,17 @@
 export type CrochetObjectType = "rectangle-panel" | "granny-square" | "border" | "strap";
 
+export type ConstructionMode = "flat-panel" | "in-the-round" | "join-ends";
+
+export type PanelJoinMethod = "seamed" | "join-as-you-go" | "join-ends";
+
+export type PanelJoin = {
+  id: string;
+  fromObjectId: string;
+  toObjectId: string;
+  method: PanelJoinMethod;
+  notes?: string;
+};
+
 export type CrochetObjectPosition = {
   x: number;
   y: number;
@@ -109,6 +121,8 @@ export type CrochetProject = {
   name: string;
   yarnSetup: YarnSetup;
   colors: ProjectColor[];
+  constructionMode?: ConstructionMode;
+  panelJoins?: PanelJoin[];
   objects: CrochetObject[];
 };
 
@@ -159,6 +173,8 @@ export type YarnWeightOption = {
 
 export type SvgRowRenderModel = {
   id: string;
+  objectId: string;
+  panelName: string;
   x: number;
   y: number;
   width: number;
@@ -294,6 +310,8 @@ export function createFreestyleProject(): CrochetProject {
     name: "Freestyle crochet draft",
     yarnSetup: defaultYarnSetup,
     colors: seedProjectColors,
+    constructionMode: "flat-panel",
+    panelJoins: [],
     objects: [
       {
         id: "object-main-panel",
@@ -305,6 +323,22 @@ export function createFreestyleProject(): CrochetProject {
         estimatedPhysicalHeight: 0,
       },
     ],
+  };
+}
+
+export function createRectanglePanelObject(
+  createId: IdFactory,
+  name = "Panel",
+  position: CrochetObjectPosition = { x: 0, y: 0, layer: 0 },
+): RectanglePanel {
+  return {
+    id: createId("object"),
+    type: "rectangle-panel",
+    name,
+    position,
+    rows: [],
+    estimatedPhysicalWidth: 0,
+    estimatedPhysicalHeight: 0,
   };
 }
 
@@ -527,6 +561,80 @@ export function calculateProjectEstimate(
   };
 }
 
+export function addCrochetObject(
+  project: CrochetProject,
+  object: CrochetObject,
+  stitchDefinitions: StitchDefinition[] = seedStitchDefinitions,
+): CrochetProject {
+  return {
+    ...project,
+    objects: [
+      ...project.objects,
+      calculateObjectEstimate(object, project.yarnSetup, stitchDefinitions),
+    ],
+  };
+}
+
+export function setProjectConstructionMode(
+  project: CrochetProject,
+  constructionMode: ConstructionMode,
+): CrochetProject {
+  return {
+    ...project,
+    constructionMode,
+  };
+}
+
+export function joinCrochetPanels(
+  project: CrochetProject,
+  fromObjectId: string,
+  toObjectId: string,
+  method: PanelJoinMethod,
+  createId: IdFactory,
+): CrochetProject {
+  if (fromObjectId === toObjectId) {
+    return project;
+  }
+
+  const fromExists = project.objects.some((object) => object.id === fromObjectId);
+  const toExists = project.objects.some((object) => object.id === toObjectId);
+  if (!fromExists || !toExists) {
+    return project;
+  }
+
+  const joins = project.panelJoins ?? [];
+  const alreadyJoined = joins.some(
+    (join) =>
+      ((join.fromObjectId === fromObjectId && join.toObjectId === toObjectId) ||
+        (join.fromObjectId === toObjectId && join.toObjectId === fromObjectId)) &&
+      join.method === method,
+  );
+
+  if (alreadyJoined) {
+    return project;
+  }
+
+  return {
+    ...project,
+    panelJoins: [
+      ...joins,
+      {
+        id: createId("join"),
+        fromObjectId,
+        toObjectId,
+        method,
+      },
+    ],
+  };
+}
+
+export function findObjectContainingRow(
+  project: CrochetProject,
+  rowId: string,
+): CrochetObject | undefined {
+  return project.objects.find((object) => object.rows.some((row) => row.id === rowId));
+}
+
 export function updateCrochetObject(
   project: CrochetProject,
   objectId: string,
@@ -593,6 +701,9 @@ export function deleteCrochetObject(project: CrochetProject, objectId: string): 
   return {
     ...project,
     objects,
+    panelJoins: (project.panelJoins ?? []).filter(
+      (join) => join.fromObjectId !== objectId && join.toObjectId !== objectId,
+    ),
   };
 }
 
@@ -740,35 +851,46 @@ export function createSvgWorkspaceModel(
   project: CrochetProject,
   selectedRowId = "",
 ): SvgWorkspaceModel {
-  const object = project.objects[0];
-  const rows = object?.rows ?? [];
   const gap = 0.12;
   const padding = 0.6;
-  let cursorY = padding;
+  const panelGap = 0.85;
+  let cursorX = padding;
+  const renderRows: SvgRowRenderModel[] = [];
 
-  const renderRows = rows.map((row) => {
-    const stitch = getStitchDefinition(row.stitchId);
-    const color = project.colors.find((candidate) => candidate.id === row.colorId);
-    const width = Math.max(0.1, row.estimatedPhysicalWidth);
-    const height = Math.max(0.1, row.estimatedPhysicalHeight);
-    const repeatCount = effectiveRowRepeatCount(row);
-    const renderRow: SvgRowRenderModel = {
-      id: row.id,
-      x: padding,
-      y: cursorY,
-      width,
-      height,
-      colorHex: color?.hex ?? "#000000",
-      textureId: textureIdForStitch(row.stitchId),
-      label: `${stitch.abbreviation} | ${row.stitchCount} sts${repeatCount > 1 ? ` x ${repeatCount}` : ""}`,
-      stitchId: row.stitchId,
-      stitchAbbreviation: stitch.abbreviation,
-      stitchCount: row.stitchCount,
-      repeatCount,
-      selected: row.id === selectedRowId,
-    };
-    cursorY += height + gap;
-    return renderRow;
+  project.objects.forEach((object) => {
+    if (object.rows.length === 0) {
+      cursorX += Math.max(2.4, object.estimatedPhysicalWidth) + panelGap;
+      return;
+    }
+
+    let cursorY = padding + 0.4;
+    object.rows.forEach((row) => {
+      const stitch = getStitchDefinition(row.stitchId);
+      const color = project.colors.find((candidate) => candidate.id === row.colorId);
+      const width = Math.max(0.1, row.estimatedPhysicalWidth);
+      const height = Math.max(0.1, row.estimatedPhysicalHeight);
+      const repeatCount = effectiveRowRepeatCount(row);
+      renderRows.push({
+        id: row.id,
+        objectId: object.id,
+        panelName: object.name,
+        x: cursorX,
+        y: cursorY,
+        width,
+        height,
+        colorHex: color?.hex ?? "#000000",
+        textureId: textureIdForStitch(row.stitchId),
+        label: `${stitch.abbreviation} | ${row.stitchCount} sts${repeatCount > 1 ? ` x ${repeatCount}` : ""}`,
+        stitchId: row.stitchId,
+        stitchAbbreviation: stitch.abbreviation,
+        stitchCount: row.stitchCount,
+        repeatCount,
+        selected: row.id === selectedRowId,
+      });
+      cursorY += height + gap;
+    });
+
+    cursorX += Math.max(2.4, object.estimatedPhysicalWidth) + panelGap;
   });
 
   const contentWidth = renderRows.reduce((width, row) => Math.max(width, row.x + row.width), padding);

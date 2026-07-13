@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 
 import {
   addCrochetRowToObject,
+  addCrochetObject,
+  createRectanglePanelObject,
   createCrochetRow,
   createFreestyleProject,
   createIdFactory,
@@ -46,6 +48,31 @@ test("a newly added row appears in the SVG workspace model", () => {
   assert.equal(model.rows.length, 1);
   assert.equal(model.rows[0].id, row.id);
   assert.equal(model.rows[0].label, "sc | 46 sts");
+});
+
+test("SVG workspace model renders rows from multiple panels with object IDs", () => {
+  const { project, createId } = projectWithRow();
+  const panel = createRectanglePanelObject(createId, "Second panel", { x: 1, y: 0, layer: 1 });
+  let updated = addCrochetObject(project, panel);
+  const secondRow = createCrochetRow(
+    {
+      stitchId: "double-crochet",
+      widthInputMode: "stitch-count",
+      stitchCount: 24,
+      repeatCount: 1,
+      colorId: "color-rose",
+      position: 1,
+    },
+    updated.yarnSetup,
+    createId,
+  );
+  updated = addCrochetRowToObject(updated, panel.id, secondRow);
+  const model = createSvgWorkspaceModel(updated);
+
+  assert.equal(model.rows.length, 2);
+  assert.equal(model.rows[0].objectId, objectId);
+  assert.equal(model.rows[1].objectId, panel.id);
+  assert.equal(model.rows[1].x > model.rows[0].x, true);
 });
 
 test("row width changes when stitch count changes", () => {

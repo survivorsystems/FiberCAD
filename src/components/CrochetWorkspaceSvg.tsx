@@ -116,9 +116,10 @@ export function CrochetWorkspaceSvg({
               key={row.id}
               className={`svg-row crochet-strip${row.selected ? " is-selected" : ""}`}
               data-svg-row-id={row.id}
+              data-svg-object-id={row.objectId}
               tabIndex={0}
               role="button"
-              aria-label={`Select ${row.label}`}
+              aria-label={`Select ${row.panelName} ${row.label}`}
               onClick={(event) => {
                 event.stopPropagation();
                 onSelectRow(row.id);

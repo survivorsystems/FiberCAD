@@ -5,9 +5,11 @@ import {
   type CrochetProject,
   type RectanglePanel,
   type StitchDefinition,
+  addCrochetObject,
   addCrochetRowToObject,
   calculateObjectEstimate,
   convertConsecutiveIdenticalRowsToRepeatedSections,
+  createRectanglePanelObject,
   createCrochetRow,
   defaultYarnSetup,
   deleteCrochetObject,
@@ -17,9 +19,11 @@ import {
   estimateStitchCountForWidth,
   generatePatternInstructions,
   isValidHexColor,
+  joinCrochetPanels,
   lookupEstimatedStitchDimensions,
   seedProjectColors,
   seedStitchDefinitions,
+  setProjectConstructionMode,
   updateCrochetObject,
   updateCrochetRowInObject,
   validateRowInput,
@@ -118,6 +122,34 @@ test("deletes an object immutably", () => {
 
   assert.equal(updated.objects.length, 0);
   assert.equal(original.objects.length, 1);
+});
+
+test("adds a rectangle panel and tracks construction mode immutably", () => {
+  const original = project();
+  const createId = createIdFactory();
+  const panel = createRectanglePanelObject(createId, "Sleeve panel", { x: 1, y: 0, layer: 1 });
+  const withPanel = addCrochetObject(original, panel);
+  const inTheRound = setProjectConstructionMode(withPanel, "in-the-round");
+
+  assert.equal(withPanel.objects.length, 2);
+  assert.equal(withPanel.objects[1].name, "Sleeve panel");
+  assert.equal(original.objects.length, 1);
+  assert.equal(inTheRound.constructionMode, "in-the-round");
+  assert.equal(withPanel.constructionMode, undefined);
+});
+
+test("joins two panels and removes joins when a panel is deleted", () => {
+  const createId = createIdFactory();
+  const panel = createRectanglePanelObject(createId, "Second panel", { x: 1, y: 0, layer: 1 });
+  const withPanel = addCrochetObject(project(), panel);
+  const joined = joinCrochetPanels(withPanel, "object-panel", panel.id, "seamed", createId);
+  const duplicateJoin = joinCrochetPanels(joined, panel.id, "object-panel", "seamed", createId);
+  const deleted = deleteCrochetObject(joined, panel.id);
+
+  assert.equal(joined.panelJoins?.length, 1);
+  assert.equal(joined.panelJoins?.[0].method, "seamed");
+  assert.equal(duplicateJoin.panelJoins?.length, 1);
+  assert.equal(deleted.panelJoins?.length, 0);
 });
 
 test("converts consecutive identical rows into a repeated section", () => {

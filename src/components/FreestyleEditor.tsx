@@ -1,12 +1,16 @@
 import { useMemo, useRef, useState } from "react";
 import { CrochetWorkspaceSvg } from "./CrochetWorkspaceSvg";
 import {
+  type ConstructionMode,
   type CrochetProject,
   type CrochetRow,
   type CrochetRowInput,
+  type PanelJoinMethod,
   type YarnSetup,
+  addCrochetObject,
   addCrochetRowToObject,
   calculateProjectEstimate,
+  createRectanglePanelObject,
   createCrochetRow,
   createFreestyleProject,
   createIdFactory,
@@ -15,11 +19,14 @@ import {
   deleteCrochetRowFromObject,
   duplicateCrochetRowInObject,
   estimateStitchCountForWidth,
+  findObjectContainingRow,
   generatePatternInstructions,
   getStitchDefinition,
   isValidHexColor,
+  joinCrochetPanels,
   seedStitchDefinitions,
   selectSvgRow,
+  setProjectConstructionMode,
   updateCrochetRowInObject,
   validateRowInput,
   yarnWeightOptions,
@@ -35,8 +42,6 @@ type RowDraft = {
   repeatCount: string;
   hex: string;
 };
-
-const objectId = "object-main-panel";
 
 const initialDraft: RowDraft = {
   stitchId: "single-crochet",
@@ -68,6 +73,26 @@ function colorIdForHex(project: CrochetProject, hex: string, createId: (prefix: 
 
 function yarnWeightName(id: string) {
   return yarnWeightOptions.find((option) => option.id === id)?.name ?? id;
+}
+
+function constructionModeLabel(mode: ConstructionMode) {
+  const labels: Record<ConstructionMode, string> = {
+    "flat-panel": "Flat panel",
+    "in-the-round": "In the round",
+    "join-ends": "Join ends",
+  };
+
+  return labels[mode];
+}
+
+function joinMethodLabel(method: PanelJoinMethod) {
+  const labels: Record<PanelJoinMethod, string> = {
+    seamed: "Seamed",
+    "join-as-you-go": "Join as you go",
+    "join-ends": "Join ends",
+  };
+
+  return labels[method];
 }
 
 function rowToDraft(row: CrochetRow, project: CrochetProject): RowDraft {
@@ -230,20 +255,32 @@ function DraftFields({ draft, onChange, idPrefix, estimate }: DraftFieldsProps) 
 export function FreestyleEditor() {
   const createId = useRef(createIdFactory());
   const [project, setProject] = useState(() => createFreestyleProject());
+  const [activeObjectId, setActiveObjectId] = useState("object-main-panel");
   const [selectedRowId, setSelectedRowId] = useState("");
   const [addDraft, setAddDraft] = useState<RowDraft>(initialDraft);
   const [selectedDraft, setSelectedDraft] = useState<RowDraft>(initialDraft);
   const [addErrors, setAddErrors] = useState<string[]>([]);
   const [selectedErrors, setSelectedErrors] = useState<string[]>([]);
   const [rotation, setRotation] = useState({ x: 0, y: -18, z: 0 });
+  const [joinTargetId, setJoinTargetId] = useState("");
+  const [joinMethod, setJoinMethod] = useState<PanelJoinMethod>("seamed");
 
-  const object = project.objects.find((candidate) => candidate.id === objectId);
-  const selectedRow = object?.rows.find((row) => row.id === selectedRowId);
+  const object = project.objects.find((candidate) => candidate.id === activeObjectId) ?? project.objects[0];
+  const selectedObject = selectedRowId ? findObjectContainingRow(project, selectedRowId) : undefined;
+  const selectedRow = selectedObject?.rows.find((row) => row.id === selectedRowId);
   const svgModel = useMemo(() => createSvgWorkspaceModel(project, selectedRowId), [project, selectedRowId]);
-  const instructions = useMemo(
-    () => generatePatternInstructions(object?.rows ?? [], project.colors),
-    [object?.rows, project.colors],
+  const instructionGroups = useMemo(
+    () =>
+      project.objects.map((projectObject) => ({
+        object: projectObject,
+        instructions: generatePatternInstructions(projectObject.rows, project.colors),
+      })),
+    [project.objects, project.colors],
   );
+  const totalRows = project.objects.reduce((count, projectObject) => count + projectObject.rows.length, 0);
+  const constructionMode = project.constructionMode ?? "flat-panel";
+  const panelJoins = project.panelJoins ?? [];
+  const joinTargets = project.objects.filter((candidate) => candidate.id !== object?.id);
 
   function updateYarnSetup(updater: (setup: YarnSetup) => YarnSetup) {
     setProject((current) => {
@@ -255,11 +292,46 @@ export function FreestyleEditor() {
   function selectRow(rowId: string) {
     const nextSelectedId = selectSvgRow(project, rowId);
     setSelectedRowId(nextSelectedId);
-    const row = object?.rows.find((candidate) => candidate.id === nextSelectedId);
-    if (row) {
+    const owner = findObjectContainingRow(project, nextSelectedId);
+    const row = owner?.rows.find((candidate) => candidate.id === nextSelectedId);
+    if (row && owner) {
+      setActiveObjectId(owner.id);
       setSelectedDraft(rowToDraft(row, project));
       setSelectedErrors([]);
     }
+  }
+
+  function selectPanel(objectId: string) {
+    setActiveObjectId(objectId);
+    setSelectedRowId("");
+    setSelectedErrors([]);
+  }
+
+  function makePanel() {
+    const panelNumber = project.objects.length + 1;
+    const panel = createRectanglePanelObject(createId.current, `Panel ${panelNumber}`, {
+      x: panelNumber - 1,
+      y: 0,
+      layer: panelNumber - 1,
+    });
+    const nextProject = addCrochetObject(project, panel);
+    setProject(nextProject);
+    setActiveObjectId(panel.id);
+    setJoinTargetId(project.objects[0]?.id ?? "");
+    setSelectedRowId("");
+  }
+
+  function updateConstructionMode(mode: ConstructionMode) {
+    setProject((current) => setProjectConstructionMode(current, mode));
+  }
+
+  function joinActivePanel() {
+    const targetId = joinTargetId && joinTargetId !== object?.id ? joinTargetId : joinTargets[0]?.id;
+    if (!object || !targetId) {
+      return;
+    }
+
+    setProject((current) => joinCrochetPanels(current, object.id, targetId, joinMethod, createId.current));
   }
 
   function addRow() {
@@ -279,14 +351,14 @@ export function FreestyleEditor() {
     }
 
     const row = createCrochetRow(input, colorResult.project.yarnSetup, createId.current);
-    const nextProject = addCrochetRowToObject(colorResult.project, objectId, row);
+    const nextProject = addCrochetRowToObject(colorResult.project, object?.id ?? "object-main-panel", row);
     setProject(nextProject);
     setSelectedRowId(row.id);
     setSelectedDraft(rowToDraft(row, nextProject));
   }
 
   function updateSelectedRow() {
-    if (!selectedRow) {
+    if (!selectedRow || !selectedObject) {
       return;
     }
 
@@ -307,7 +379,7 @@ export function FreestyleEditor() {
 
     const replacement = createCrochetRow(input, colorResult.project.yarnSetup, createId.current);
     setProject(
-      updateCrochetRowInObject(colorResult.project, objectId, selectedRow.id, {
+      updateCrochetRowInObject(colorResult.project, selectedObject.id, selectedRow.id, {
         ...replacement,
         id: selectedRow.id,
         position: selectedRow.position,
@@ -316,13 +388,17 @@ export function FreestyleEditor() {
   }
 
   function duplicateSelectedRow() {
-    if (!selectedRow || !object) {
+    if (!selectedRow || !selectedObject) {
       return;
     }
 
-    const sourceIndex = object.rows.findIndex((row) => row.id === selectedRow.id);
-    const nextProject = duplicateCrochetRowInObject(project, objectId, selectedRow.id, createId.current);
-    const duplicate = nextProject.objects[0].rows[sourceIndex + 1];
+    const sourceIndex = selectedObject.rows.findIndex((row) => row.id === selectedRow.id);
+    const nextProject = duplicateCrochetRowInObject(project, selectedObject.id, selectedRow.id, createId.current);
+    const nextObject = nextProject.objects.find((candidate) => candidate.id === selectedObject.id);
+    const duplicate = nextObject?.rows[sourceIndex + 1];
+    if (!duplicate) {
+      return;
+    }
     setProject(nextProject);
     setSelectedRowId(duplicate.id);
     setSelectedDraft(rowToDraft(duplicate, nextProject));
@@ -333,7 +409,11 @@ export function FreestyleEditor() {
       return;
     }
 
-    setProject(deleteCrochetRowFromObject(project, objectId, selectedRow.id));
+    if (!selectedObject) {
+      return;
+    }
+
+    setProject(deleteCrochetRowFromObject(project, selectedObject.id, selectedRow.id));
     setSelectedRowId("");
     setSelectedErrors([]);
   }
@@ -350,8 +430,8 @@ export function FreestyleEditor() {
           <h2 id="freestyle-title">Build the project visually, row by row</h2>
         </div>
         <p>
-          {(object?.rows.length ?? 0)} SVG rows | {object?.estimatedPhysicalWidth.toFixed(1) ?? "0.0"} in x{" "}
-          {object?.estimatedPhysicalHeight.toFixed(1) ?? "0.0"} in estimate
+          {totalRows} SVG rows | {project.objects.length} panel{project.objects.length === 1 ? "" : "s"} |{" "}
+          {constructionModeLabel(constructionMode)}
         </p>
       </div>
 
@@ -360,6 +440,30 @@ export function FreestyleEditor() {
           <h3>Add row</h3>
           <fieldset>
             <legend>Project setup</legend>
+            <label>
+              Construction
+              <select
+                value={constructionMode}
+                onChange={(event) => updateConstructionMode(event.target.value as ConstructionMode)}
+              >
+                <option value="flat-panel">Flat panel</option>
+                <option value="in-the-round">In the round</option>
+                <option value="join-ends">Join ends</option>
+              </select>
+            </label>
+            <label>
+              Active panel
+              <select value={object?.id ?? ""} onChange={(event) => selectPanel(event.target.value)}>
+                {project.objects.map((projectObject) => (
+                  <option key={projectObject.id} value={projectObject.id}>
+                    {projectObject.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button className="button secondary light-button full-width-action" type="button" onClick={makePanel}>
+              Make panel
+            </button>
             <label>
               Yarn weight
               <select
@@ -397,7 +501,7 @@ export function FreestyleEditor() {
           </fieldset>
 
           <fieldset>
-            <legend>Row details</legend>
+            <legend>Row details for {object?.name ?? "panel"}</legend>
             <DraftFields draft={addDraft} onChange={setAddDraft} idPrefix="add-row" estimate={addEstimate} />
           </fieldset>
 
@@ -418,7 +522,7 @@ export function FreestyleEditor() {
 
         <section className="svg-workspace-shell" aria-label="Interactive SVG crochet workspace">
           <div className="workspace-toolbar">
-            <span>Blank SVG canvas</span>
+            <span>{object?.name ?? "Panel"} on blank SVG canvas</span>
             <button type="button" onClick={() => setSelectedRowId("")}>
               Clear selection
             </button>
@@ -473,7 +577,7 @@ export function FreestyleEditor() {
             <h2>Selected row</h2>
             <p>
               {selectedRow && selectedDefinition
-                ? `Editing row object ${selectedRow.position}: ${selectedDefinition.name}.`
+                ? `Editing ${selectedObject?.name ?? "panel"} row ${selectedRow.position}: ${selectedDefinition.name}.`
                 : "No SVG row selected."}
             </p>
 
@@ -510,7 +614,77 @@ export function FreestyleEditor() {
           </section>
 
           <section className="simulation-card compact-navigator" aria-label="Compact object navigator">
-            <h2>Navigator</h2>
+            <h2>Panels</h2>
+            <div className="panel-tools">
+              <div className="panel-chip-row" role="list" aria-label="Project panels">
+                {project.objects.map((projectObject) => (
+                  <button
+                    key={projectObject.id}
+                    type="button"
+                    className={`panel-chip${projectObject.id === object?.id ? " is-active" : ""}`}
+                    onClick={() => selectPanel(projectObject.id)}
+                  >
+                    <span>{projectObject.name}</span>
+                    <small>
+                      {projectObject.rows.length} rows | {projectObject.estimatedPhysicalWidth.toFixed(1)} in
+                    </small>
+                  </button>
+                ))}
+              </div>
+
+              <div className="join-panel-controls">
+                <h3>Join panels</h3>
+                {joinTargets.length ? (
+                  <>
+                    <label>
+                      Join {object?.name ?? "panel"} to
+                      <select
+                        value={joinTargetId || joinTargets[0]?.id || ""}
+                        onChange={(event) => setJoinTargetId(event.target.value)}
+                      >
+                        {joinTargets.map((projectObject) => (
+                          <option key={projectObject.id} value={projectObject.id}>
+                            {projectObject.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      Method
+                      <select
+                        value={joinMethod}
+                        onChange={(event) => setJoinMethod(event.target.value as PanelJoinMethod)}
+                      >
+                        <option value="seamed">Seamed</option>
+                        <option value="join-as-you-go">Join as you go</option>
+                        <option value="join-ends">Join ends</option>
+                      </select>
+                    </label>
+                    <button className="button secondary light-button" type="button" onClick={joinActivePanel}>
+                      Join panels
+                    </button>
+                  </>
+                ) : (
+                  <p className="empty-state">Make another panel before joining pieces.</p>
+                )}
+              </div>
+
+              {panelJoins.length ? (
+                <ul className="panel-join-list">
+                  {panelJoins.map((join) => {
+                    const from = project.objects.find((candidate) => candidate.id === join.fromObjectId);
+                    const to = project.objects.find((candidate) => candidate.id === join.toObjectId);
+                    return (
+                      <li key={join.id}>
+                        {from?.name ?? "Panel"} + {to?.name ?? "Panel"} | {joinMethodLabel(join.method)}
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : null}
+            </div>
+
+            <h3>Rows in {object?.name ?? "panel"}</h3>
             <ol className="row-object-list">
               {object?.rows.length ? (
                 object.rows.map((row) => {
@@ -529,20 +703,31 @@ export function FreestyleEditor() {
                   );
                 })
               ) : (
-                <li className="empty-state">SVG workspace is empty.</li>
+                <li className="empty-state">This panel is empty.</li>
               )}
             </ol>
           </section>
 
           <section className="simulation-card" aria-label="Generated pattern instructions">
             <h2>Written instructions</h2>
-            <ol className="instruction-preview">
-              {instructions.length ? (
-                instructions.map((instruction) => <li key={instruction.id}>{instruction.text}</li>)
-              ) : (
+            {instructionGroups.some((group) => group.instructions.length) ? (
+              instructionGroups.map((group) =>
+                group.instructions.length ? (
+                  <div key={group.object.id} className="instruction-group">
+                    <h3>{group.object.name}</h3>
+                    <ol className="instruction-preview">
+                      {group.instructions.map((instruction) => (
+                        <li key={instruction.id}>{instruction.text}</li>
+                      ))}
+                    </ol>
+                  </div>
+                ) : null,
+              )
+            ) : (
+              <ol className="instruction-preview">
                 <li className="empty-state">Written instructions will appear as SVG rows are added.</li>
-              )}
-            </ol>
+              </ol>
+            )}
           </section>
 
           <section className="simulation-card premium-export" aria-label="Premium PDF export">
