@@ -10,6 +10,10 @@ import {
   addUploadedPatternSource,
   applyCrochetTechniqueToProject,
   applyCrochetTechniqueToRowInput,
+  calculateRowStitchMath,
+  createDefaultShapingOperation,
+  createStitchOperation,
+  applyStitchOperationToCount,
   calculateObjectEstimate,
   chartSymbolForTechnique,
   convertConsecutiveIdenticalRowsToRepeatedSections,
@@ -137,11 +141,108 @@ test("applies shaping techniques to a row input", () => {
   const increased = applyCrochetTechniqueToRowInput(input, "tech-increase");
   assert.equal(increased.stitchCount, 13);
   assert.deepEqual(increased.shaping, { kind: "increase", stitchDelta: 1 });
+  assert.deepEqual(increased.stitchOperations?.[0], {
+    id: "increase-12-1-2",
+    operationType: "increase",
+    stitchId: "single-crochet",
+    sourceType: "stitch",
+    sourceStart: 12,
+    sourceCount: 1,
+    producedCount: 2,
+    placement: "middle",
+    label: "sc inc",
+    instruction: "Work 2 sc in the next stitch.",
+  });
   assert.equal(increased.techniqueIds?.includes("tech-increase"), true);
 
   const decreased = applyCrochetTechniqueToRowInput(increased, "tech-invisible-decrease");
   assert.equal(decreased.stitchCount, 12);
   assert.deepEqual(decreased.shaping, { kind: "invisible-decrease", stitchDelta: -1 });
+  assert.equal(decreased.stitchOperations?.[1].label, "sc2tog");
+});
+
+test("creates custom increase and decrease operations with consumed and produced counts", () => {
+  const threeScIncrease = createDefaultShapingOperation("tech-increase", "single-crochet", 7, {
+    producedCount: 3,
+  });
+  assert.equal(threeScIncrease.sourceCount, 1);
+  assert.equal(threeScIncrease.producedCount, 3);
+  assert.equal(threeScIncrease.label, "3 sc in next st");
+  assert.equal(applyStitchOperationToCount(12, threeScIncrease), 14);
+
+  const dc4tog = createDefaultShapingOperation("tech-decrease", "double-crochet", 7, {
+    sourceCount: 4,
+  });
+  assert.equal(dc4tog.sourceCount, 4);
+  assert.equal(dc4tog.producedCount, 1);
+  assert.equal(dc4tog.label, "dc4tog");
+  assert.equal(applyStitchOperationToCount(12, dc4tog), 9);
+});
+
+test("generated instructions include increase and decrease operation math", () => {
+  const createId = createIdFactory();
+  const increasedInput = applyCrochetTechniqueToRowInput(
+    {
+      stitchId: "single-crochet",
+      widthInputMode: "stitch-count",
+      stitchCount: 12,
+      repeatCount: 1,
+      colorId: "color-cream",
+      position: 1,
+    },
+    "tech-increase",
+  );
+  const row = createCrochetRow(increasedInput, defaultYarnSetup, createId);
+  const instructions = generatePatternInstructions([row], seedProjectColors);
+
+  assert.match(instructions[0].text, /Work 2 sc in the next stitch/);
+  assert.match(instructions[0].text, /1 consumed, 2 produced/);
+  assert.match(instructions[0].text, /13 sts/);
+});
+
+test("calculates row stitch math and plain-language shaping warnings", () => {
+  const row = {
+    stitchCount: 13,
+    stitchOperations: [
+      createDefaultShapingOperation("tech-increase", "single-crochet", 7),
+    ],
+  };
+  const math = calculateRowStitchMath(row, 12);
+
+  assert.equal(math.previousStitchesAvailable, 12);
+  assert.equal(math.previousStitchesConsumed, 12);
+  assert.equal(math.currentStitchesProduced, 13);
+  assert.equal(math.netStitchChange, 1);
+  assert.deepEqual(math.warnings, []);
+
+  const invalid = calculateRowStitchMath(
+    {
+      stitchCount: 10,
+      stitchOperations: [
+        createStitchOperation({
+          operationType: "decrease",
+          stitchId: "single-crochet",
+          sourceType: "stitch",
+          sourceStart: 4,
+          sourceCount: 2,
+          producedCount: 1,
+          placement: "middle",
+        }),
+        createStitchOperation({
+          operationType: "decrease",
+          stitchId: "single-crochet",
+          sourceType: "stitch",
+          sourceStart: 5,
+          sourceCount: 2,
+          producedCount: 1,
+          placement: "middle",
+        }),
+      ],
+    },
+    10,
+  );
+
+  assert.equal(invalid.warnings.some((warning) => warning.includes("already consumed")), true);
 });
 
 test("defines behavior rules for texture and specialty stitches", () => {

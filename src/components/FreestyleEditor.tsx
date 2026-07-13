@@ -10,6 +10,7 @@ import {
   type CrochetTechnique,
   type CrochetRoundMode,
   type CrochetRowShaping,
+  type StitchOperation,
   type GrannySquare,
   type PanelJoinMethod,
   type UploadedPatternSource,
@@ -56,6 +57,7 @@ type RowDraft = {
   hex: string;
   techniqueIds?: string[];
   shaping?: CrochetRowShaping;
+  stitchOperations?: StitchOperation[];
   roundMode?: CrochetRoundMode;
   colorwork?: CrochetColorworkMode;
   finishingTechniqueIds?: string[];
@@ -147,6 +149,7 @@ function rowToDraft(row: CrochetRow, project: CrochetProject): RowDraft {
     hex: color?.hex ?? "#5f7f7a",
     techniqueIds: row.techniqueIds,
     shaping: row.shaping,
+    stitchOperations: row.stitchOperations,
     roundMode: row.roundMode,
     colorwork: row.colorwork,
     finishingTechniqueIds: row.finishingTechniqueIds,
@@ -165,6 +168,7 @@ function draftToInput(draft: RowDraft, colorId: string, position: number): Croch
     position,
     techniqueIds: draft.techniqueIds,
     shaping: draft.shaping,
+    stitchOperations: draft.stitchOperations,
     roundMode: draft.roundMode,
     colorwork: draft.colorwork,
     finishingTechniqueIds: draft.finishingTechniqueIds,
@@ -179,6 +183,7 @@ function inputToDraft(input: CrochetRowInput, draft: RowDraft): RowDraft {
     repeatCount: String(input.repeatCount),
     techniqueIds: input.techniqueIds,
     shaping: input.shaping,
+    stitchOperations: input.stitchOperations,
     roundMode: input.roundMode,
     colorwork: input.colorwork,
     finishingTechniqueIds: input.finishingTechniqueIds,

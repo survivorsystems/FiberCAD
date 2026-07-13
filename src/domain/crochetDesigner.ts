@@ -57,6 +57,34 @@ export type CrochetRowShaping = {
   partialRow?: boolean;
 };
 
+export type StitchOperationType = "increase" | "decrease";
+
+export type StitchOperationSourceType = "stitch" | "chain-space" | "edge-extension";
+
+export type StitchOperationPlacement = "beginning" | "middle" | "end";
+
+export type StitchOperation = {
+  id: string;
+  operationType: StitchOperationType;
+  stitchId: string;
+  sourceType: StitchOperationSourceType;
+  sourceStart: number;
+  sourceCount: number;
+  producedCount: number;
+  placement: StitchOperationPlacement;
+  label: string;
+  instruction: string;
+};
+
+export type RowStitchMath = {
+  previousStitchesAvailable: number;
+  previousStitchesConsumed: number;
+  currentStitchesProduced: number;
+  netStitchChange: number;
+  operations: StitchOperation[];
+  warnings: string[];
+};
+
 export type StitchDimensionEstimate = {
   yarnWeightId: string;
   recommendedHookMm: number;
@@ -157,6 +185,7 @@ export type CrochetRow = {
   position: number;
   techniqueIds?: string[];
   shaping?: CrochetRowShaping;
+  stitchOperations?: StitchOperation[];
   roundMode?: CrochetRoundMode;
   colorwork?: CrochetColorworkMode;
   finishingTechniqueIds?: string[];
@@ -244,6 +273,7 @@ export type CrochetRowInput = {
   position: number;
   techniqueIds?: string[];
   shaping?: CrochetRowShaping;
+  stitchOperations?: StitchOperation[];
   roundMode?: CrochetRoundMode;
   colorwork?: CrochetColorworkMode;
   finishingTechniqueIds?: string[];
@@ -816,6 +846,148 @@ function roundUpToMultiple(value: number, multiple: number): number {
   return Math.max(multiple, Math.ceil(value / multiple) * multiple);
 }
 
+function stitchAbbreviationForId(stitchId: string): string {
+  return getStitchDefinition(stitchId).abbreviation;
+}
+
+function operationInstruction(operation: Omit<StitchOperation, "label" | "instruction">): string {
+  const abbreviation = stitchAbbreviationForId(operation.stitchId);
+  if (operation.operationType === "increase") {
+    if (operation.sourceType === "chain-space") {
+      return `Work ${operation.producedCount} ${abbreviation} in the next chain space.`;
+    }
+    if (operation.sourceType === "edge-extension") {
+      return `Add ${operation.producedCount} ${abbreviation} at the ${operation.placement} edge.`;
+    }
+    return `Work ${operation.producedCount} ${abbreviation} in the next stitch.`;
+  }
+
+  return `${abbreviation}${operation.sourceCount}tog.`;
+}
+
+function operationLabel(operation: Omit<StitchOperation, "label" | "instruction">): string {
+  const abbreviation = stitchAbbreviationForId(operation.stitchId);
+  if (operation.operationType === "increase") {
+    return operation.producedCount === 2 ? `${abbreviation} inc` : `${operation.producedCount} ${abbreviation} in next st`;
+  }
+  return `${abbreviation}${operation.sourceCount}tog`;
+}
+
+export function createStitchOperation(
+  operation: Omit<StitchOperation, "id" | "label" | "instruction"> & { id?: string },
+): StitchOperation {
+  const normalized = {
+    ...operation,
+    id: operation.id ?? `${operation.operationType}-${operation.sourceStart}-${operation.sourceCount}-${operation.producedCount}`,
+    sourceStart: Math.max(1, Math.round(operation.sourceStart)),
+    sourceCount: Math.max(1, Math.round(operation.sourceCount)),
+    producedCount: Math.max(1, Math.round(operation.producedCount)),
+  };
+
+  return {
+    ...normalized,
+    label: operationLabel(normalized),
+    instruction: operationInstruction(normalized),
+  };
+}
+
+export function createDefaultShapingOperation(
+  techniqueId: string,
+  stitchId: string,
+  sourceStart: number,
+  options: Partial<Pick<StitchOperation, "sourceCount" | "producedCount" | "sourceType" | "placement">> = {},
+): StitchOperation {
+  if (techniqueId === "tech-increase") {
+    return createStitchOperation({
+      operationType: "increase",
+      stitchId,
+      sourceType: options.sourceType ?? "stitch",
+      sourceStart,
+      sourceCount: options.sourceCount ?? 1,
+      producedCount: options.producedCount ?? 2,
+      placement: options.placement ?? "middle",
+    });
+  }
+
+  if (techniqueId === "tech-decrease" || techniqueId === "tech-invisible-decrease") {
+    return createStitchOperation({
+      operationType: "decrease",
+      stitchId,
+      sourceType: "stitch",
+      sourceStart,
+      sourceCount: options.sourceCount ?? 2,
+      producedCount: options.producedCount ?? 1,
+      placement: options.placement ?? "middle",
+    });
+  }
+
+  throw new Error(`Technique does not create a shaping operation: ${techniqueId}`);
+}
+
+export function calculateStitchOperationDelta(operation: StitchOperation): number {
+  if (operation.sourceType === "edge-extension") {
+    return operation.producedCount;
+  }
+
+  return operation.producedCount - operation.sourceCount;
+}
+
+export function applyStitchOperationToCount(stitchCount: number, operation: StitchOperation): number {
+  return Math.max(1, stitchCount + calculateStitchOperationDelta(operation));
+}
+
+export function calculateRowStitchMath(
+  row: Pick<CrochetRow, "stitchCount" | "stitchOperations">,
+  previousStitchesAvailable = row.stitchCount,
+): RowStitchMath {
+  const operations = row.stitchOperations ?? [];
+  const warnings: string[] = [];
+  const consumedSources = new Set<number>();
+
+  operations.forEach((operation) => {
+    if (operation.sourceType === "edge-extension") {
+      return;
+    }
+
+    for (let offset = 0; offset < operation.sourceCount; offset += 1) {
+      const source = operation.sourceStart + offset;
+      if (source > previousStitchesAvailable) {
+        warnings.push(`${operation.label} is placed outside the available stitch range.`);
+      }
+      if (consumedSources.has(source)) {
+        warnings.push(`${operation.label} overlaps stitch ${source}, which is already consumed.`);
+      }
+      consumedSources.add(source);
+    }
+  });
+
+  const previousStitchesConsumed = Math.max(
+    0,
+    row.stitchCount - operations.reduce((delta, operation) => delta + calculateStitchOperationDelta(operation), 0),
+  );
+
+  if (previousStitchesConsumed > previousStitchesAvailable) {
+    warnings.push(
+      `This row consumes ${previousStitchesConsumed} stitches, but the previous row only provides ${previousStitchesAvailable}.`,
+    );
+  }
+
+  if (previousStitchesConsumed < previousStitchesAvailable) {
+    warnings.push(
+      `This row leaves ${previousStitchesAvailable - previousStitchesConsumed} previous-row stitches unworked; mark them as skipped, short-row, or intentional.`,
+    );
+  }
+
+  return {
+    previousStitchesAvailable,
+    previousStitchesConsumed,
+    currentStitchesProduced: row.stitchCount,
+    netStitchChange: row.stitchCount - previousStitchesAvailable,
+    operations,
+    warnings,
+  };
+}
+
 export function findCrochetTechnique(techniqueId: string): CrochetTechnique {
   const technique = crochetTechniqueGroups
     .flatMap((group) => group.techniques)
@@ -887,21 +1059,39 @@ export function applyCrochetTechniqueToRowInput(
   }
 
   if (technique.id === "tech-increase") {
+    const operation = createDefaultShapingOperation(
+      technique.id,
+      input.stitchId,
+      Math.max(1, input.stitchCount ?? 1),
+    );
     return {
       ...input,
-      stitchCount: input.widthInputMode === "stitch-count" ? (input.stitchCount ?? 1) + 1 : input.stitchCount,
+      stitchCount:
+        input.widthInputMode === "stitch-count"
+          ? applyStitchOperationToCount(input.stitchCount ?? 1, operation)
+          : input.stitchCount,
       techniqueIds,
-      shaping: { kind: "increase", stitchDelta: 1 },
+      shaping: { kind: "increase", stitchDelta: calculateStitchOperationDelta(operation) },
+      stitchOperations: [...(input.stitchOperations ?? []), operation],
     };
   }
 
   if (technique.id === "tech-decrease" || technique.id === "tech-invisible-decrease") {
     const kind = technique.id === "tech-invisible-decrease" ? "invisible-decrease" : "decrease";
+    const operation = createDefaultShapingOperation(
+      technique.id,
+      input.stitchId,
+      Math.max(1, (input.stitchCount ?? 2) - 1),
+    );
     return {
       ...input,
-      stitchCount: input.widthInputMode === "stitch-count" ? Math.max(1, (input.stitchCount ?? 1) - 1) : input.stitchCount,
+      stitchCount:
+        input.widthInputMode === "stitch-count"
+          ? applyStitchOperationToCount(input.stitchCount ?? 1, operation)
+          : input.stitchCount,
       techniqueIds,
-      shaping: { kind, stitchDelta: -1 },
+      shaping: { kind, stitchDelta: calculateStitchOperationDelta(operation) },
+      stitchOperations: [...(input.stitchOperations ?? []), operation],
     };
   }
 
@@ -1012,6 +1202,7 @@ export function applyCrochetTechniqueToProject(
         position: row.position,
         techniqueIds: row.techniqueIds,
         shaping: row.shaping,
+        stitchOperations: row.stitchOperations,
         roundMode: row.roundMode,
         colorwork: row.colorwork,
         finishingTechniqueIds: row.finishingTechniqueIds,
@@ -1024,6 +1215,7 @@ export function applyCrochetTechniqueToProject(
         repeatCount: updated.repeatCount,
         techniqueIds: updated.techniqueIds,
         shaping: updated.shaping,
+        stitchOperations: updated.stitchOperations,
         roundMode: updated.roundMode,
         colorwork: updated.colorwork,
         finishingTechniqueIds: updated.finishingTechniqueIds,
@@ -1261,6 +1453,7 @@ export function createCrochetRow(
       position: input.position,
       techniqueIds: input.techniqueIds,
       shaping: input.shaping,
+      stitchOperations: input.stitchOperations,
       roundMode: input.roundMode,
       colorwork: input.colorwork,
       finishingTechniqueIds: input.finishingTechniqueIds,
@@ -1632,8 +1825,12 @@ export function generatePatternInstructions(
     const techniqueNotes = (row.techniqueIds ?? [])
       .map((techniqueId) => findCrochetTechnique(techniqueId).name)
       .join(", ");
+    const operationNotes = (row.stitchOperations ?? [])
+      .map((operation) => `${operation.instruction} ${operation.sourceCount} consumed, ${operation.producedCount} produced`)
+      .join("; ");
     const behaviorNote = effectiveTechniqueBehavior(row.techniqueIds).note;
-    const noteParts = [techniqueNotes, behaviorNote].filter(Boolean);
+    const resultCountNote = (row.stitchOperations ?? []).length > 0 ? `Resulting row count: ${row.stitchCount} sts` : "";
+    const noteParts = [techniqueNotes, operationNotes, resultCountNote, behaviorNote].filter(Boolean);
     const noteText = noteParts.length > 0 ? ` Technique notes: ${noteParts.join(". ")}.` : "";
 
     nextRowNumber = rowEnd + 1;
