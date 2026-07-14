@@ -45,6 +45,8 @@ const browser = await chromium.launch();
 let renderedRows = 0;
 let toolboxTop = 0;
 let viewportHeight = 0;
+let fileMenuVisible = false;
+let viewMenuVisible = false;
 
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
@@ -63,6 +65,11 @@ try {
   }
   toolboxTop = toolboxBox.y;
   viewportHeight = page.viewportSize()?.height ?? 0;
+
+  await page.getByRole("button", { name: "File" }).click();
+  fileMenuVisible = await page.getByText("Export pattern PDF").isVisible();
+  await page.getByRole("button", { name: "View" }).click();
+  viewMenuVisible = await page.getByText("360 project view").isVisible();
 } finally {
   await browser.close();
   if (server) {
@@ -76,6 +83,14 @@ if (renderedRows !== 1) {
 
 if (toolboxTop < viewportHeight * 0.5) {
   throw new Error(`Expected the build toolbox to float near the bottom, top was ${toolboxTop}px.`);
+}
+
+if (!fileMenuVisible) {
+  throw new Error("Expected File menu to expose pattern import/export actions.");
+}
+
+if (!viewMenuVisible) {
+  throw new Error("Expected View menu to expose 360 project view controls.");
 }
 
 if (!existsSync(baselinePath)) {

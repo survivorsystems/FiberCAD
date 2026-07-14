@@ -16,7 +16,6 @@ import {
   type GrannySquareTemplateId,
   type GrannySquare,
   type PanelJoinMethod,
-  type UploadedPatternSource,
   type YarnSetup,
   addUploadedPatternSource,
   addCrochetObject,
@@ -71,6 +70,7 @@ type RowDraft = {
 
 type ProjectType = "blanket" | "pillow-cover" | "purse" | "shirt" | "pants";
 type ToolDrawer = "settings" | "library" | "project" | null;
+type TopMenu = "file" | "edit" | "view" | null;
 type PrimaryToolId =
   | "select"
   | `stitch:${string}`
@@ -487,6 +487,8 @@ export function FreestyleEditor() {
   const [joinMethod, setJoinMethod] = useState<PanelJoinMethod>("seamed");
   const [activeTool, setActiveTool] = useState<PrimaryToolId>("stitch:single-crochet");
   const [activeDrawer, setActiveDrawer] = useState<ToolDrawer>(null);
+  const [topMenu, setTopMenu] = useState<TopMenu>(null);
+  const [menuMessage, setMenuMessage] = useState("");
   const [squareTemplateId, setSquareTemplateId] =
     useState<GrannySquareTemplateId>("traditional-granny-square");
 
@@ -497,7 +499,6 @@ export function FreestyleEditor() {
   const totalRows = project.objects.reduce((count, projectObject) => count + projectObject.rows.length, 0);
   const constructionMode = project.constructionMode ?? "flat-panel";
   const panelJoins = project.panelJoins ?? [];
-  const uploadedPatterns = project.uploadedPatterns ?? [];
   const joinTargets = project.objects.filter((candidate) => candidate.id !== object?.id);
   const activeSquare = object?.type === "granny-square" ? object : null;
   const activeSquareColor = activeSquare
@@ -511,8 +512,29 @@ export function FreestyleEditor() {
     });
   }
 
-  function patternStatusLabel(pattern: UploadedPatternSource) {
-    return pattern.status === "text-ready" ? "Ready to parse later" : "Saved for PDF parser";
+  function toggleTopMenu(menu: Exclude<TopMenu, null>) {
+    setTopMenu((current) => (current === menu ? null : menu));
+    setMenuMessage("");
+  }
+
+  function createNewProject() {
+    createId.current = createIdFactory();
+    setProject(createFreestyleProject());
+    setActiveObjectId("object-main-panel");
+    setSelectedRowId("");
+    setAddDraft(initialDraft);
+    setSelectedDraft(initialDraft);
+    setAddErrors([]);
+    setSelectedErrors([]);
+    setRotation({ x: 0, y: 0, z: 0 });
+    setActiveTool("stitch:single-crochet");
+    setActiveDrawer(null);
+    setTopMenu(null);
+    setMenuMessage("New project created.");
+  }
+
+  function showPlannedFileAction(action: string) {
+    setMenuMessage(`${action} is planned for save/export persistence.`);
   }
 
   function uploadPatternFile(file: File) {
@@ -984,6 +1006,121 @@ export function FreestyleEditor() {
         </p>
       </div>
 
+      <nav className="canvas-menu-bar" aria-label="Canvas menu bar">
+        <div className="menu-group">
+          <button type="button" aria-expanded={topMenu === "file"} onClick={() => toggleTopMenu("file")}>
+            File
+          </button>
+          {topMenu === "file" ? (
+            <div className="canvas-menu-dropdown" role="menu">
+              <button type="button" role="menuitem" onClick={createNewProject}>
+                Create new project
+              </button>
+              <button type="button" role="menuitem" onClick={() => showPlannedFileAction("Save project as template")}>
+                Save project as template
+              </button>
+              <button type="button" role="menuitem" onClick={() => showPlannedFileAction("Save project as pattern")}>
+                Save project as pattern
+              </button>
+              <button type="button" role="menuitem" onClick={() => showPlannedFileAction("Export pattern PDF")}>
+                Export pattern PDF
+              </button>
+              <label className="menu-file-upload" role="menuitem">
+                Import pattern PDF
+                <input
+                  type="file"
+                  accept=".txt,.md,.markdown,.json,.csv,.pdf,text/plain,text/markdown,application/json,application/pdf"
+                  onChange={handlePatternUpload}
+                />
+              </label>
+              {menuMessage ? <p>{menuMessage}</p> : null}
+              {uploadMessage ? <p>{uploadMessage}</p> : null}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="menu-group">
+          <button type="button" aria-expanded={topMenu === "edit"} onClick={() => toggleTopMenu("edit")}>
+            Edit
+          </button>
+          {topMenu === "edit" ? (
+            <div className="canvas-menu-dropdown edit-menu-dropdown" role="menu">
+              <DraftFields draft={addDraft} onChange={setAddDraft} idPrefix="menu-add-row" estimate={addEstimate} />
+              <div className="menu-action-row">
+                <button
+                  type="button"
+                  onClick={() => activatePrimaryTool("increase")}
+                >
+                  Increase
+                </button>
+                <button
+                  type="button"
+                  onClick={() => activatePrimaryTool("decrease")}
+                >
+                  Decrease
+                </button>
+                <button type="button" onClick={addRow}>
+                  Add row
+                </button>
+              </div>
+              {addErrors.length > 0 ? (
+                <ul className="form-errors" aria-live="polite">
+                  {addErrors.map((error) => (
+                    <li key={error}>{error}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+
+        <div className="menu-group">
+          <button type="button" aria-expanded={topMenu === "view"} onClick={() => toggleTopMenu("view")}>
+            View
+          </button>
+          {topMenu === "view" ? (
+            <div className="canvas-menu-dropdown view-menu-dropdown" role="menu">
+              <h3>360 project view</h3>
+              <div className="rotation-controls menu-rotation-controls" aria-label="360 project view controls">
+                <label>
+                  Tilt X
+                  <input
+                    type="range"
+                    min="-55"
+                    max="55"
+                    value={rotation.x}
+                    onChange={(event) => setRotation({ ...rotation, x: Number(event.target.value) })}
+                  />
+                </label>
+                <label>
+                  Turn Y
+                  <input
+                    type="range"
+                    min="-65"
+                    max="65"
+                    value={rotation.y}
+                    onChange={(event) => setRotation({ ...rotation, y: Number(event.target.value) })}
+                  />
+                </label>
+                <label>
+                  Spin Z
+                  <input
+                    type="range"
+                    min="-45"
+                    max="45"
+                    value={rotation.z}
+                    onChange={(event) => setRotation({ ...rotation, z: Number(event.target.value) })}
+                  />
+                </label>
+                <button type="button" onClick={() => setRotation({ x: 0, y: 0, z: 0 })}>
+                  Reset view
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </nav>
+
       <div className="freestyle-grid svg-editor-grid floating-canvas-layout">
         <section className="primary-tool-dock" aria-label="Primary crochet tools">
           <button
@@ -1196,25 +1333,6 @@ export function FreestyleEditor() {
                 >
                   New square same project
                 </button>
-                <label>
-                  Upload pattern
-                  <input
-                    type="file"
-                    accept=".txt,.md,.markdown,.json,.csv,.pdf,text/plain,text/markdown,application/json,application/pdf"
-                    onChange={handlePatternUpload}
-                  />
-                </label>
-                {uploadMessage ? <p className="estimate-note">{uploadMessage}</p> : null}
-                {uploadedPatterns.length ? (
-                  <ul className="uploaded-pattern-list">
-                    {uploadedPatterns.map((pattern) => (
-                      <li key={pattern.id}>
-                        <strong>{pattern.fileName}</strong>
-                        <span>{patternStatusLabel(pattern)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
                 <div className="technique-groups" aria-label="Crochet techniques">
                   {crochetTechniqueGroups.map((group) => (
                     <section className="technique-group" key={group.id} aria-label={`${group.name} techniques`}>
@@ -1286,42 +1404,6 @@ export function FreestyleEditor() {
             onSelectRow={selectRow}
             onClearSelection={() => setSelectedRowId("")}
           />
-
-          <div className="rotation-controls" aria-label="3D-style preview rotation controls">
-            <label>
-              Tilt X
-              <input
-                type="range"
-                min="-55"
-                max="55"
-                value={rotation.x}
-                onChange={(event) => setRotation({ ...rotation, x: Number(event.target.value) })}
-              />
-            </label>
-            <label>
-              Turn Y
-              <input
-                type="range"
-                min="-65"
-                max="65"
-                value={rotation.y}
-                onChange={(event) => setRotation({ ...rotation, y: Number(event.target.value) })}
-              />
-            </label>
-            <label>
-              Spin Z
-              <input
-                type="range"
-                min="-45"
-                max="45"
-                value={rotation.z}
-                onChange={(event) => setRotation({ ...rotation, z: Number(event.target.value) })}
-              />
-            </label>
-            <button type="button" onClick={() => setRotation({ x: 0, y: 0, z: 0 })}>
-              Reset view
-            </button>
-          </div>
         </section>
 
         <aside className="freestyle-output toolbox-panel" aria-label="Properties toolbox">
@@ -1572,21 +1654,6 @@ export function FreestyleEditor() {
             </ol>
           </section>
 
-          <section className="simulation-card" aria-label="Generated pattern instructions">
-            <h2>Written pattern</h2>
-            <p className="premium-note">Printable written instructions will be a premium export feature.</p>
-          </section>
-
-          <section className="simulation-card premium-export" aria-label="Premium PDF export">
-            <div>
-              <h2>Print pattern</h2>
-              <p>Export the visual layout and written instructions as a printable PDF.</p>
-            </div>
-            <button type="button" disabled aria-disabled="true">
-              Export PDF
-            </button>
-            <span>Premium feature planned</span>
-          </section>
         </aside>
       </div>
     </section>
