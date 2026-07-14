@@ -16,6 +16,7 @@ import {
   createStitchOperation,
   applyStitchOperationToCount,
   calculateObjectEstimate,
+  chartSymbolForStitch,
   chartSymbolForTechnique,
   convertConsecutiveIdenticalRowsToRepeatedSections,
   crochetTechniqueGroups,
@@ -133,6 +134,12 @@ test("maps crochet techniques to chart symbols for the toolbox", () => {
   assert.equal(chartSymbolForTechnique(findCrochetTechnique("tech-magic-ring")), "magic-ring");
   assert.equal(chartSymbolForTechnique(findCrochetTechnique("tech-tapestry-crochet")), "tapestry");
   assert.equal(chartSymbolForTechnique(findCrochetTechnique("tech-double-crochet")), "double-t");
+});
+
+test("maps stitch definitions to chart symbols for compact stitch menus", () => {
+  assert.equal(chartSymbolForStitch("chain-stitch"), "chain-oval");
+  assert.equal(chartSymbolForStitch("single-crochet"), "single-cross");
+  assert.equal(chartSymbolForStitch("treble-crochet"), "treble-t");
 });
 
 test("applies shaping techniques to a row input", () => {

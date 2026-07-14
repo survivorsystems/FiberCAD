@@ -24,6 +24,7 @@ import {
   applyCrochetTechniqueToProject,
   applyCrochetTechniqueToRowInput,
   calculateProjectEstimate,
+  chartSymbolForStitch,
   chartSymbolForTechnique,
   crochetTechniqueGroups,
   createGrannySquareFromTemplate,
@@ -241,19 +242,11 @@ type DraftFieldsProps = {
 function DraftFields({ draft, onChange, idPrefix, estimate }: DraftFieldsProps) {
   return (
     <>
-      <label>
-        Stitch
-        <select
-          value={draft.stitchId}
-          onChange={(event) => onChange({ ...draft, stitchId: event.target.value })}
-        >
-          {seedStitchDefinitions.map((definition) => (
-            <option key={definition.id} value={definition.id}>
-              {definition.abbreviation} - {definition.name}
-            </option>
-          ))}
-        </select>
-      </label>
+      <StitchIconMenu
+        selectedStitchId={draft.stitchId}
+        onSelect={(stitchId) => onChange({ ...draft, stitchId })}
+        idPrefix={idPrefix}
+      />
 
       <div className="segmented-field" role="radiogroup" aria-label={`${idPrefix} width mode`}>
         <label>
@@ -338,6 +331,48 @@ function DraftFields({ draft, onChange, idPrefix, estimate }: DraftFieldsProps) 
         </label>
       </div>
     </>
+  );
+}
+
+type StitchIconMenuProps = {
+  selectedStitchId: string;
+  onSelect: (stitchId: string) => void;
+  idPrefix: string;
+};
+
+function StitchIconMenu({ selectedStitchId, onSelect, idPrefix }: StitchIconMenuProps) {
+  const selectedDefinition = getStitchDefinition(selectedStitchId);
+
+  return (
+    <div className="stitch-icon-menu">
+      <div className="stitch-icon-menu-header">
+        <span>Stitch</span>
+        <strong>
+          {selectedDefinition.abbreviation} - {selectedDefinition.name}
+        </strong>
+      </div>
+      <div className="stitch-symbol-grid" role="radiogroup" aria-label={`${idPrefix} stitch`}>
+        {seedStitchDefinitions.map((definition) => {
+          const selected = definition.id === selectedStitchId;
+
+          return (
+            <button
+              key={definition.id}
+              type="button"
+              className={`stitch-symbol-button${selected ? " is-active" : ""}`}
+              role="radio"
+              aria-checked={selected}
+              aria-label={`${definition.name}, ${definition.abbreviation}`}
+              title={`${definition.abbreviation} - ${definition.name}`}
+              onClick={() => onSelect(definition.id)}
+            >
+              <TechniqueSymbol symbol={chartSymbolForStitch(definition.id)} />
+              <strong>{definition.abbreviation}</strong>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 

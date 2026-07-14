@@ -465,6 +465,85 @@
   gap: 8px;
 }
 
+.stitch-icon-menu {
+  display: grid;
+  gap: 8px;
+}
+
+.stitch-icon-menu-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 950;
+}
+
+.stitch-icon-menu-header span {
+  text-transform: uppercase;
+}
+
+.stitch-icon-menu-header strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stitch-symbol-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(58px, 1fr));
+  gap: 7px;
+}
+
+.stitch-symbol-button {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-height: 58px;
+  padding: 7px 6px;
+  border: 1px solid rgba(58, 46, 40, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.stitch-symbol-button .technique-symbol {
+  grid-row: auto;
+  width: 27px;
+  height: 27px;
+  color: #3e6d68;
+}
+
+.stitch-symbol-button strong {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 0.78rem;
+  font-weight: 950;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stitch-symbol-button:hover,
+.stitch-symbol-button:focus-visible {
+  border-color: rgba(62, 109, 104, 0.48);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(62, 109, 104, 0.13);
+}
+
+.stitch-symbol-button.is-active {
+  border-color: rgba(62, 109, 104, 0.66);
+  background: rgba(95, 127, 122, 0.16);
+  box-shadow: inset 0 -3px 0 #3e6d68;
+}
+
 .technique-groups {
   display: grid;
   gap: 14px;

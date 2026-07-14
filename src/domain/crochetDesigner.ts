@@ -1147,6 +1147,10 @@ export function chartSymbolForTechnique(technique: CrochetTechnique): CrochetCha
   return technique.chartSymbol ?? techniqueChartSymbols[technique.id] ?? stitchChartSymbols[technique.stitchId ?? ""] ?? "single-cross";
 }
 
+export function chartSymbolForStitch(stitchId: string): CrochetChartSymbol {
+  return stitchChartSymbols[stitchId] ?? "single-cross";
+}
+
 export function chartSymbolsForRow(row: CrochetRow): CrochetChartSymbol[] {
   const symbols = [stitchChartSymbols[row.stitchId] ?? "single-cross"];
   (row.techniqueIds ?? []).forEach((techniqueId) => {
