@@ -16,6 +16,7 @@ import {
   createStitchOperation,
   applyStitchOperationToCount,
   calculateObjectEstimate,
+  calculateProjectEstimate,
   chartSymbolForStitch,
   chartSymbolForTechnique,
   convertConsecutiveIdenticalRowsToRepeatedSections,
@@ -425,6 +426,78 @@ test("calculates an object's estimated physical width and height", () => {
   assert.equal(Math.round(estimated.estimatedPhysicalWidth * 10) / 10, 8);
   assert.equal(estimated.estimatedPhysicalHeight, 0.5);
   assert.equal(estimated.rows[0].estimatedPhysicalWidth > 0, true);
+});
+
+test("aligns stitches worked into a foundation chain to the foundation width", () => {
+  const panel: RectanglePanel = {
+    ...rectanglePanel(),
+    rows: [
+      {
+        id: "row-chain",
+        stitchId: "chain-stitch",
+        stitchCount: 46,
+        rowCount: 1,
+        colorId: "color-cream",
+        position: 1,
+        estimatedPhysicalWidth: 0,
+        estimatedPhysicalHeight: 0,
+      },
+      {
+        id: "row-dc",
+        stitchId: "double-crochet",
+        stitchCount: 46,
+        rowCount: 1,
+        colorId: "color-blue",
+        position: 2,
+        estimatedPhysicalWidth: 0,
+        estimatedPhysicalHeight: 0,
+      },
+    ],
+  };
+
+  const estimated = calculateObjectEstimate(panel, defaultYarnSetup);
+  const [foundationRow, doubleCrochetRow] = estimated.rows;
+
+  assert.equal(doubleCrochetRow.estimatedPhysicalWidth, foundationRow.estimatedPhysicalWidth);
+  assert.equal(doubleCrochetRow.estimatedPhysicalHeight > foundationRow.estimatedPhysicalHeight, true);
+});
+
+test("renders stitches worked into a foundation chain at the foundation width", () => {
+  const estimated = calculateProjectEstimate({
+    ...project(),
+    objects: [
+      {
+        ...rectanglePanel(),
+        rows: [
+          {
+            id: "row-chain",
+            stitchId: "chain-stitch",
+            stitchCount: 46,
+            rowCount: 1,
+            colorId: "color-cream",
+            position: 1,
+            estimatedPhysicalWidth: 0,
+            estimatedPhysicalHeight: 0,
+          },
+          {
+            id: "row-dc",
+            stitchId: "double-crochet",
+            stitchCount: 46,
+            rowCount: 1,
+            colorId: "color-blue",
+            position: 2,
+            estimatedPhysicalWidth: 0,
+            estimatedPhysicalHeight: 0,
+          },
+        ],
+      },
+    ],
+  });
+
+  const model = createSvgWorkspaceModel(estimated);
+
+  assert.equal(model.rows[1].width, model.rows[0].width);
+  assert.equal(model.rows[1].height > model.rows[0].height, true);
 });
 
 test("updates a crochet object immutably", () => {

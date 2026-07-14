@@ -70,6 +70,26 @@ type RowDraft = {
 };
 
 type ProjectType = "blanket" | "pillow-cover" | "purse" | "shirt" | "pants";
+type ToolDrawer = "settings" | "library" | "project" | null;
+type PrimaryToolId =
+  | "select"
+  | `stitch:${string}`
+  | "increase"
+  | "decrease"
+  | "color"
+  | "panel"
+  | "square"
+  | "settings"
+  | "library"
+  | "project";
+
+const primaryStitchToolIds = [
+  "chain-stitch",
+  "single-crochet",
+  "half-double-crochet",
+  "double-crochet",
+  "treble-crochet",
+] as const;
 
 const initialDraft: RowDraft = {
   stitchId: "single-crochet",
@@ -237,16 +257,19 @@ type DraftFieldsProps = {
   onChange: (draft: RowDraft) => void;
   idPrefix: string;
   estimate: string;
+  showStitchMenu?: boolean;
 };
 
-function DraftFields({ draft, onChange, idPrefix, estimate }: DraftFieldsProps) {
+function DraftFields({ draft, onChange, idPrefix, estimate, showStitchMenu = true }: DraftFieldsProps) {
   return (
     <>
-      <StitchIconMenu
-        selectedStitchId={draft.stitchId}
-        onSelect={(stitchId) => onChange({ ...draft, stitchId })}
-        idPrefix={idPrefix}
-      />
+      {showStitchMenu ? (
+        <StitchIconMenu
+          selectedStitchId={draft.stitchId}
+          onSelect={(stitchId) => onChange({ ...draft, stitchId })}
+          idPrefix={idPrefix}
+        />
+      ) : null}
 
       <div className="segmented-field" role="radiogroup" aria-label={`${idPrefix} width mode`}>
         <label>
@@ -462,6 +485,8 @@ export function FreestyleEditor() {
   const [rotation, setRotation] = useState({ x: 0, y: 0, z: 0 });
   const [joinTargetId, setJoinTargetId] = useState("");
   const [joinMethod, setJoinMethod] = useState<PanelJoinMethod>("seamed");
+  const [activeTool, setActiveTool] = useState<PrimaryToolId>("stitch:single-crochet");
+  const [activeDrawer, setActiveDrawer] = useState<ToolDrawer>(null);
   const [squareTemplateId, setSquareTemplateId] =
     useState<GrannySquareTemplateId>("traditional-granny-square");
 
@@ -588,6 +613,50 @@ export function FreestyleEditor() {
         ? `${technique.name} applied to the selected row and queued for the next row.`
         : `${technique.name} queued for the next row.`,
     );
+  }
+
+  function chooseStitchTool(stitchId: string) {
+    setActiveTool(`stitch:${stitchId}`);
+    setActiveDrawer(null);
+    setAddDraft((draft) => ({ ...draft, stitchId }));
+  }
+
+  function activatePrimaryTool(toolId: PrimaryToolId) {
+    if (toolId.startsWith("stitch:")) {
+      chooseStitchTool(toolId.slice("stitch:".length));
+      return;
+    }
+
+    setActiveTool(toolId);
+    if (toolId === "increase" || toolId === "decrease") {
+      const technique = crochetTechniqueGroups
+        .flatMap((group) => group.techniques)
+        .find((candidate) => candidate.id === (toolId === "increase" ? "tech-increase" : "tech-decrease"));
+      if (technique) {
+        selectTechnique(technique);
+      }
+      setActiveDrawer(null);
+      return;
+    }
+
+    if (toolId === "panel") {
+      makePanel();
+      setActiveDrawer("project");
+      return;
+    }
+
+    if (toolId === "square") {
+      makeGrannySquare();
+      setActiveDrawer("project");
+      return;
+    }
+
+    if (toolId === "settings" || toolId === "library" || toolId === "project") {
+      setActiveDrawer((current) => (current === toolId ? null : toolId));
+      return;
+    }
+
+    setActiveDrawer(null);
   }
 
   function makePanel() {
@@ -916,176 +985,292 @@ export function FreestyleEditor() {
       </div>
 
       <div className="freestyle-grid svg-editor-grid floating-canvas-layout">
-        <section className="builder-form row-builder-form toolbox-panel" aria-label="Build toolbox">
-          <h3>Build toolbox</h3>
-          <fieldset className="primary-toolbox-section">
-            <legend>Add row</legend>
-            <DraftFields draft={addDraft} onChange={setAddDraft} idPrefix="add-row" estimate={addEstimate} />
-
-            {addErrors.length > 0 ? (
-              <ul className="form-errors" aria-live="polite">
-                {addErrors.map((error) => (
-                  <li key={error}>{error}</li>
-                ))}
-              </ul>
-            ) : null}
-
-            <button className="button primary dark-button full-width-action" type="button" onClick={addRow}>
-              Add row to {object?.name ?? "piece"}
-            </button>
-          </fieldset>
-
-          <fieldset>
-            <legend>Technique toolbox</legend>
-            <div className="technique-groups" aria-label="Crochet techniques">
-              {crochetTechniqueGroups.map((group) => (
-                <section className="technique-group" key={group.id} aria-label={`${group.name} techniques`}>
-                  <h4>{group.name}</h4>
-                  <div className="technique-tool-grid">
-                    {group.techniques.map((technique) => (
-                      <button
-                        key={technique.id}
-                        type="button"
-                        className={`technique-tool${technique.stitchId === addDraft.stitchId ? " is-active" : ""}`}
-                        onClick={() => selectTechnique(technique)}
-                      >
-                        <TechniqueSymbol symbol={chartSymbolForTechnique(technique)} />
-                        <strong>{technique.abbreviation ?? technique.name}</strong>
-                        <span>{technique.abbreviation ? technique.name : technique.description}</span>
-                      </button>
-                    ))}
-                  </div>
-                </section>
-              ))}
-            </div>
-            {techniqueMessage ? <p className="estimate-note">{techniqueMessage}</p> : null}
-          </fieldset>
-
-          <fieldset>
-            <legend>Project</legend>
-            <label>
-              Whatcha makin?
-              <select value={projectType} onChange={(event) => setProjectType(event.target.value as ProjectType)}>
-                {projectTypeOptions.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Construction
-              <select
-                value={constructionMode}
-                onChange={(event) => updateConstructionMode(event.target.value as ConstructionMode)}
-              >
-                <option value="flat-panel">Flat panel</option>
-                <option value="in-the-round">In the round</option>
-                <option value="join-ends">Join ends</option>
-              </select>
-            </label>
-            <label>
-              Active piece
-              <select value={object?.id ?? ""} onChange={(event) => selectPanel(event.target.value)}>
-                {project.objects.map((projectObject) => (
-                  <option key={projectObject.id} value={projectObject.id}>
-                    {projectObject.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button className="button secondary light-button full-width-action" type="button" onClick={makePanel}>
-              Make panel
-            </button>
-            <label>
-              Granny square template
-              <select
-                value={squareTemplateId}
-                onChange={(event) => setSquareTemplateId(event.target.value as GrannySquareTemplateId)}
-              >
-                {grannySquareTemplates.map((template) => (
-                  <option key={template.id} value={template.id}>
-                    {template.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="piece-action-grid" aria-label="Granny square actions">
-              <button className="button secondary light-button" type="button" onClick={() => makeGrannySquare()}>
-                New square
-              </button>
+        <section className="primary-tool-dock" aria-label="Primary crochet tools">
+          <button
+            type="button"
+            className={`tool-dock-button${activeTool === "select" ? " is-active" : ""}`}
+            onClick={() => activatePrimaryTool("select")}
+            title="Select"
+          >
+            <span className="tool-dock-icon">SEL</span>
+            <strong>Select</strong>
+          </button>
+          {primaryStitchToolIds.map((stitchId) => {
+            const definition = getStitchDefinition(stitchId);
+            const toolId: PrimaryToolId = `stitch:${definition.id}`;
+            return (
               <button
-                className="button secondary light-button"
+                key={definition.id}
                 type="button"
-                onClick={() => makeGrannySquare(`Square variation ${project.objects.length + 1}`)}
+                className={`tool-dock-button stitch-tool${activeTool === toolId ? " is-active" : ""}`}
+                onClick={() => activatePrimaryTool(toolId)}
+                title={`${definition.abbreviation} - ${definition.name}`}
               >
-                New square same project
+                <TechniqueSymbol symbol={chartSymbolForStitch(definition.id)} />
+                <strong>{definition.abbreviation}</strong>
               </button>
-              <button className="button secondary light-button" type="button" onClick={duplicateActiveSquare}>
-                Duplicate square
+            );
+          })}
+          <button
+            type="button"
+            className={`tool-dock-button${activeTool === "increase" ? " is-active" : ""}`}
+            onClick={() => activatePrimaryTool("increase")}
+            title="Increase"
+          >
+            <TechniqueSymbol symbol="increase-fan" />
+            <strong>inc</strong>
+          </button>
+          <button
+            type="button"
+            className={`tool-dock-button${activeTool === "decrease" ? " is-active" : ""}`}
+            onClick={() => activatePrimaryTool("decrease")}
+            title="Decrease"
+          >
+            <TechniqueSymbol symbol="decrease-join" />
+            <strong>dec</strong>
+          </button>
+          <button
+            type="button"
+            className={`tool-dock-button${activeTool === "color" ? " is-active" : ""}`}
+            onClick={() => activatePrimaryTool("color")}
+            title="Color"
+          >
+            <span className="tool-dock-swatch" style={{ background: addDraft.hex }} />
+            <strong>Color</strong>
+          </button>
+          <button
+            type="button"
+            className={`tool-dock-button${activeTool === "panel" ? " is-active" : ""}`}
+            onClick={() => activatePrimaryTool("panel")}
+            title="Make panel"
+          >
+            <span className="tool-dock-icon">PNL</span>
+            <strong>Panel</strong>
+          </button>
+          <button
+            type="button"
+            className={`tool-dock-button${activeTool === "square" ? " is-active" : ""}`}
+            onClick={() => activatePrimaryTool("square")}
+            title="New granny square"
+          >
+            <span className="tool-dock-icon">SQ</span>
+            <strong>Square</strong>
+          </button>
+          <button
+            type="button"
+            className={`tool-dock-button${activeDrawer === "project" ? " is-active" : ""}`}
+            onClick={() => activatePrimaryTool("project")}
+            title="Project pieces"
+          >
+            <span className="tool-dock-icon">OBJ</span>
+            <strong>Pieces</strong>
+          </button>
+          <button
+            type="button"
+            className={`tool-dock-button${activeDrawer === "library" ? " is-active" : ""}`}
+            onClick={() => activatePrimaryTool("library")}
+            title="Library"
+          >
+            <span className="tool-dock-icon">LIB</span>
+            <strong>Library</strong>
+          </button>
+          <button
+            type="button"
+            className={`tool-dock-button${activeDrawer === "settings" ? " is-active" : ""}`}
+            onClick={() => activatePrimaryTool("settings")}
+            title="Settings"
+          >
+            <span className="tool-dock-icon">SET</span>
+            <strong>Setup</strong>
+          </button>
+        </section>
+
+        <section className="context-tool-panel toolbox-panel" aria-label="Build toolbox">
+          <div className="context-tool-heading">
+            <span>Active tool</span>
+            <strong>{getStitchDefinition(addDraft.stitchId).abbreviation} row</strong>
+            {techniqueMessage ? <small>{techniqueMessage}</small> : null}
+          </div>
+          <div className="context-row-fields">
+            <DraftFields
+              draft={addDraft}
+              onChange={setAddDraft}
+              idPrefix="add-row"
+              estimate={addEstimate}
+              showStitchMenu={false}
+            />
+          </div>
+          {addErrors.length > 0 ? (
+            <ul className="form-errors" aria-live="polite">
+              {addErrors.map((error) => (
+                <li key={error}>{error}</li>
+              ))}
+            </ul>
+          ) : null}
+          <button className="button primary dark-button add-from-context" type="button" onClick={addRow}>
+            Add row to {object?.name ?? "piece"}
+          </button>
+        </section>
+
+        {activeDrawer ? (
+          <section className="tool-drawer-panel" aria-label={`${activeDrawer} drawer`}>
+            <div className="tool-drawer-header">
+              <h3>{activeDrawer === "settings" ? "Project setup" : activeDrawer === "library" ? "Library" : "Project pieces"}</h3>
+              <button type="button" onClick={() => setActiveDrawer(null)}>
+                Close
               </button>
             </div>
-          </fieldset>
-          <fieldset>
-            <legend>Import pattern</legend>
-            <label>
-              Upload file
-              <input
-                type="file"
-                accept=".txt,.md,.markdown,.json,.csv,.pdf,text/plain,text/markdown,application/json,application/pdf"
-                onChange={handlePatternUpload}
-              />
-            </label>
-            {uploadMessage ? <p className="estimate-note">{uploadMessage}</p> : null}
-            {uploadedPatterns.length ? (
-              <ul className="uploaded-pattern-list">
-                {uploadedPatterns.map((pattern) => (
-                  <li key={pattern.id}>
-                    <strong>{pattern.fileName}</strong>
-                    <span>{patternStatusLabel(pattern)}</span>
-                  </li>
-                ))}
-              </ul>
+
+            {activeDrawer === "settings" ? (
+              <div className="tool-drawer-grid">
+                <label>
+                  Yarn weight
+                  <select
+                    value={project.yarnSetup.yarnWeightId}
+                    onChange={(event) =>
+                      updateYarnSetup((setup) => ({
+                        ...setup,
+                        yarnWeightId: event.target.value,
+                        yarnWeightName: yarnWeightName(event.target.value),
+                      }))
+                    }
+                  >
+                    {yarnWeightOptions.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Hook size mm
+                  <input
+                    type="number"
+                    min="0.5"
+                    step="0.25"
+                    value={project.yarnSetup.hookSizeMm}
+                    onChange={(event) =>
+                      updateYarnSetup((setup) => ({
+                        ...setup,
+                        hookSizeMm: Number(event.target.value),
+                      }))
+                    }
+                  />
+                </label>
+                <label>
+                  Construction
+                  <select
+                    value={constructionMode}
+                    onChange={(event) => updateConstructionMode(event.target.value as ConstructionMode)}
+                  >
+                    <option value="flat-panel">Flat panel</option>
+                    <option value="in-the-round">In the round</option>
+                    <option value="join-ends">Join ends</option>
+                  </select>
+                </label>
+              </div>
             ) : null}
-          </fieldset>
-          <fieldset>
-            <legend>Tools</legend>
-            <label>
-              Yarn weight
-              <select
-                value={project.yarnSetup.yarnWeightId}
-                onChange={(event) =>
-                  updateYarnSetup((setup) => ({
-                    ...setup,
-                    yarnWeightId: event.target.value,
-                    yarnWeightName: yarnWeightName(event.target.value),
-                  }))
-                }
-              >
-                {yarnWeightOptions.map((option) => (
-                  <option key={option.id} value={option.id}>
-                    {option.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Hook size mm
-              <input
-                type="number"
-                min="0.5"
-                step="0.25"
-                value={project.yarnSetup.hookSizeMm}
-                onChange={(event) =>
-                  updateYarnSetup((setup) => ({
-                    ...setup,
-                    hookSizeMm: Number(event.target.value),
-                  }))
-                }
-              />
-            </label>
-          </fieldset>
-        </section>
+
+            {activeDrawer === "library" ? (
+              <div className="tool-drawer-grid library-drawer-grid">
+                <label>
+                  Granny square template
+                  <select
+                    value={squareTemplateId}
+                    onChange={(event) => setSquareTemplateId(event.target.value as GrannySquareTemplateId)}
+                  >
+                    {grannySquareTemplates.map((template) => (
+                      <option key={template.id} value={template.id}>
+                        {template.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button className="button secondary light-button" type="button" onClick={() => makeGrannySquare()}>
+                  New square
+                </button>
+                <button
+                  className="button secondary light-button"
+                  type="button"
+                  onClick={() => makeGrannySquare(`Square variation ${project.objects.length + 1}`)}
+                >
+                  New square same project
+                </button>
+                <label>
+                  Upload pattern
+                  <input
+                    type="file"
+                    accept=".txt,.md,.markdown,.json,.csv,.pdf,text/plain,text/markdown,application/json,application/pdf"
+                    onChange={handlePatternUpload}
+                  />
+                </label>
+                {uploadMessage ? <p className="estimate-note">{uploadMessage}</p> : null}
+                {uploadedPatterns.length ? (
+                  <ul className="uploaded-pattern-list">
+                    {uploadedPatterns.map((pattern) => (
+                      <li key={pattern.id}>
+                        <strong>{pattern.fileName}</strong>
+                        <span>{patternStatusLabel(pattern)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                <div className="technique-groups" aria-label="Crochet techniques">
+                  {crochetTechniqueGroups.map((group) => (
+                    <section className="technique-group" key={group.id} aria-label={`${group.name} techniques`}>
+                      <h4>{group.name}</h4>
+                      <div className="technique-tool-grid">
+                        {group.techniques.map((technique) => (
+                          <button
+                            key={technique.id}
+                            type="button"
+                            className={`technique-tool${technique.stitchId === addDraft.stitchId ? " is-active" : ""}`}
+                            onClick={() => selectTechnique(technique)}
+                          >
+                            <TechniqueSymbol symbol={chartSymbolForTechnique(technique)} />
+                            <strong>{technique.abbreviation ?? technique.name}</strong>
+                            <span>{technique.abbreviation ? technique.name : technique.description}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {activeDrawer === "project" ? (
+              <div className="tool-drawer-grid">
+                <label>
+                  Whatcha makin?
+                  <select value={projectType} onChange={(event) => setProjectType(event.target.value as ProjectType)}>
+                    {projectTypeOptions.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Active piece
+                  <select value={object?.id ?? ""} onChange={(event) => selectPanel(event.target.value)}>
+                    {project.objects.map((projectObject) => (
+                      <option key={projectObject.id} value={projectObject.id}>
+                        {projectObject.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button className="button secondary light-button" type="button" onClick={makePanel}>
+                  Make panel
+                </button>
+                <button className="button secondary light-button" type="button" onClick={duplicateActiveSquare}>
+                  Duplicate square
+                </button>
+              </div>
+            ) : null}
+          </section>
+        ) : null}
 
         <section className="svg-workspace-shell" aria-label="Interactive SVG crochet workspace">
           <div className="workspace-toolbar">

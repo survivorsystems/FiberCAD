@@ -241,7 +241,7 @@
 
 .floating-canvas-layout .svg-stage {
   min-height: 0;
-  padding-bottom: 310px;
+  padding-bottom: 500px;
 }
 
 .floating-canvas-layout .workspace-toolbar {
@@ -277,7 +277,7 @@
   position: fixed;
   z-index: 5;
   right: 18px;
-  bottom: 276px;
+  bottom: 490px;
   width: min(560px, calc(100vw - 36px));
   border: 1px solid rgba(58, 46, 40, 0.12);
   border-radius: 8px;
@@ -308,21 +308,27 @@
 
 .floating-canvas-layout .toolbox-panel {
   top: auto;
-  bottom: 18px;
-  height: 240px;
+  bottom: 92px;
+  height: 132px;
   box-sizing: border-box;
-}
-
-.floating-canvas-layout .row-builder-form.toolbox-panel {
-  right: auto;
-  width: min(720px, calc(52vw - 24px));
 }
 
 .floating-canvas-layout .freestyle-output {
   top: auto;
-  bottom: 18px;
+  bottom: 236px;
   height: 240px;
   box-sizing: border-box;
+}
+
+.floating-canvas-layout .context-tool-panel.toolbox-panel {
+  left: 50%;
+  right: auto;
+  display: grid;
+  grid-template-columns: 124px minmax(0, 1fr) auto;
+  align-items: center;
+  width: min(920px, calc(100vw - 36px));
+  overflow: visible;
+  transform: translateX(-50%);
 }
 
 .floating-canvas-layout .toolbox-panel > h3 {
@@ -351,6 +357,10 @@
   overflow: auto;
 }
 
+.floating-canvas-layout .context-tool-panel > * {
+  min-width: 0;
+}
+
 .floating-canvas-layout .toolbox-panel .technique-groups {
   display: flex;
   align-items: stretch;
@@ -364,6 +374,212 @@
 .floating-canvas-layout .freestyle-output {
   left: auto;
   width: min(820px, calc(48vw - 24px));
+}
+
+.primary-tool-dock {
+  position: fixed;
+  z-index: 8;
+  left: 50%;
+  bottom: 16px;
+  display: flex;
+  gap: 7px;
+  max-width: calc(100vw - 36px);
+  padding: 8px;
+  overflow-x: auto;
+  border: 1px solid rgba(58, 46, 40, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 250, 243, 0.94);
+  box-shadow: 0 22px 48px rgba(34, 25, 20, 0.2);
+  transform: translateX(-50%);
+  backdrop-filter: blur(14px);
+  scrollbar-width: thin;
+}
+
+.tool-dock-button {
+  display: grid;
+  place-items: center;
+  gap: 3px;
+  min-width: 56px;
+  min-height: 58px;
+  padding: 7px 8px;
+  border: 1px solid rgba(58, 46, 40, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.62);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.tool-dock-button .technique-symbol {
+  grid-row: auto;
+  width: 26px;
+  height: 26px;
+}
+
+.tool-dock-button strong {
+  max-width: 58px;
+  overflow: hidden;
+  font-size: 0.68rem;
+  font-weight: 950;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tool-dock-button:hover,
+.tool-dock-button:focus-visible {
+  border-color: rgba(62, 109, 104, 0.46);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(62, 109, 104, 0.13);
+}
+
+.tool-dock-button.is-active {
+  border-color: rgba(62, 109, 104, 0.68);
+  background: rgba(95, 127, 122, 0.18);
+  box-shadow: inset 0 -3px 0 #3e6d68;
+}
+
+.tool-dock-icon,
+.tool-dock-swatch {
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  border-radius: 8px;
+  color: #3e6d68;
+  font-size: 0.64rem;
+  font-weight: 950;
+}
+
+.tool-dock-icon {
+  border: 1px solid rgba(62, 109, 104, 0.28);
+  background: rgba(95, 127, 122, 0.1);
+}
+
+.tool-dock-swatch {
+  border: 2px solid rgba(58, 46, 40, 0.2);
+}
+
+.context-tool-heading {
+  align-self: center;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding-right: 12px;
+  border-right: 1px solid var(--line);
+  overflow: visible;
+}
+
+.context-tool-heading span {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 950;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.context-tool-heading strong {
+  font-size: 1rem;
+  font-weight: 950;
+}
+
+.context-tool-heading small {
+  max-width: 180px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.context-row-fields {
+  min-width: 0;
+}
+
+.context-row-fields > .segmented-field,
+.context-row-fields > label,
+.context-row-fields > .color-input-row,
+.context-row-fields > .estimate-note {
+  display: inline-grid;
+  vertical-align: top;
+  margin-right: 8px;
+}
+
+.context-row-fields > .segmented-field {
+  min-width: 230px;
+}
+
+.context-row-fields > label {
+  min-width: 112px;
+}
+
+.context-row-fields > .color-input-row {
+  grid-template-columns: 72px 118px;
+  min-width: 202px;
+}
+
+.context-row-fields > .estimate-note {
+  max-width: 190px;
+  margin-top: 0;
+}
+
+.add-from-context {
+  align-self: center;
+  min-width: 150px;
+}
+
+.tool-drawer-panel {
+  position: fixed;
+  z-index: 7;
+  left: 18px;
+  bottom: 236px;
+  width: min(720px, calc(100vw - 36px));
+  max-height: min(430px, calc(100vh - 300px));
+  overflow: auto;
+  padding: 14px;
+  border: 1px solid rgba(58, 46, 40, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 250, 243, 0.95);
+  box-shadow: 0 22px 48px rgba(34, 25, 20, 0.2);
+  backdrop-filter: blur(14px);
+}
+
+.tool-drawer-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.tool-drawer-header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.tool-drawer-header button {
+  min-height: 32px;
+  padding: 6px 10px;
+  border: 1px solid rgba(58, 46, 40, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.tool-drawer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.library-drawer-grid .technique-groups,
+.library-drawer-grid .uploaded-pattern-list,
+.library-drawer-grid .estimate-note {
+  grid-column: 1 / -1;
 }
 
 .setup-panel {
@@ -768,14 +984,6 @@
 }
 
 @media (max-width: 1120px) {
-  .svg-editor-grid {
-    grid-template-columns: minmax(240px, 0.8fr) minmax(460px, 1.4fr);
-  }
-
-  .floating-canvas-layout {
-    grid-template-columns: 1fr;
-  }
-
   .freestyle-output {
     grid-column: 1 / -1;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -844,36 +1052,46 @@
   .floating-canvas-layout .rotation-controls {
     left: 10px;
     right: 10px;
-    bottom: 326px;
+    bottom: 530px;
     width: auto;
   }
 
-  .floating-canvas-layout .toolbox-panel,
+  .floating-canvas-layout .context-tool-panel.toolbox-panel,
   .floating-canvas-layout .freestyle-output {
     left: 10px;
     right: 10px;
     padding: 10px;
   }
 
-  .floating-canvas-layout .toolbox-panel {
-    bottom: 10px;
-    height: 300px;
-  }
-
-  .floating-canvas-layout .row-builder-form.toolbox-panel {
-    right: 10px;
+  .floating-canvas-layout .context-tool-panel.toolbox-panel {
+    bottom: 86px;
     width: auto;
+    height: 180px;
+    transform: none;
   }
 
   .floating-canvas-layout .freestyle-output {
-    bottom: 412px;
+    bottom: 278px;
     width: auto;
     height: 260px;
   }
 
-  .floating-canvas-layout .toolbox-panel > h3 {
-    flex-basis: 92px;
-    font-size: 0.75rem;
+  .primary-tool-dock {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    transform: none;
+  }
+
+  .context-row-fields {
+    min-width: 520px;
+  }
+
+  .tool-drawer-panel {
+    left: 10px;
+    right: 10px;
+    bottom: 278px;
+    width: auto;
   }
 
   .premium-export {

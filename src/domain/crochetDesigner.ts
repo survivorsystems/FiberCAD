@@ -1648,16 +1648,36 @@ export function calculateRowEstimate(
   row: CrochetRow,
   yarnSetup: YarnSetup,
   stitchDefinitions: StitchDefinition[] = seedStitchDefinitions,
+  foundationWidthIn?: number,
 ): CrochetRow {
   const dimensions = lookupEstimatedStitchDimensions(row.stitchId, yarnSetup, stitchDefinitions);
   const repeatCount = effectiveRowRepeatCount(row);
   const techniqueBehavior = effectiveTechniqueBehavior(row.techniqueIds);
+  const estimatedPhysicalWidth =
+    foundationWidthIn !== undefined
+      ? foundationWidthIn * techniqueBehavior.widthMultiplier
+      : row.stitchCount * dimensions.stitchWidthIn * techniqueBehavior.widthMultiplier;
 
   return {
     ...row,
-    estimatedPhysicalWidth: row.stitchCount * dimensions.stitchWidthIn * techniqueBehavior.widthMultiplier,
+    estimatedPhysicalWidth,
     estimatedPhysicalHeight: repeatCount * dimensions.rowHeightIn * techniqueBehavior.heightMultiplier,
   };
+}
+
+function calculateRowsWithFoundationAlignment(
+  rows: CrochetRow[],
+  yarnSetup: YarnSetup,
+  stitchDefinitions: StitchDefinition[] = seedStitchDefinitions,
+): CrochetRow[] {
+  const foundationWidthsByCount = new Map<number, number>();
+
+  return rows.map((row) => {
+    const anchorWidth = row.stitchId === "chain-stitch" ? undefined : foundationWidthsByCount.get(row.stitchCount);
+    const estimated = calculateRowEstimate(row, yarnSetup, stitchDefinitions, anchorWidth);
+    foundationWidthsByCount.set(row.stitchCount, estimated.estimatedPhysicalWidth);
+    return estimated;
+  });
 }
 
 export function calculateObjectEstimate(
@@ -1665,7 +1685,7 @@ export function calculateObjectEstimate(
   yarnSetup: YarnSetup,
   stitchDefinitions: StitchDefinition[] = seedStitchDefinitions,
 ): CrochetObject {
-  const rows = object.rows.map((row) => calculateRowEstimate(row, yarnSetup, stitchDefinitions));
+  const rows = calculateRowsWithFoundationAlignment(object.rows, yarnSetup, stitchDefinitions);
   const rowEstimatedWidth = rows.reduce(
     (width, row) => Math.max(width, row.estimatedPhysicalWidth),
     0,
