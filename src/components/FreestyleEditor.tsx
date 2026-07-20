@@ -1,5 +1,5 @@
-import { type ChangeEvent, useMemo, useRef, useState } from "react";
-import { CrochetWorkspaceSvg } from "./CrochetWorkspaceSvg";
+import { type ChangeEvent, type PointerEvent as ReactPointerEvent, type ReactNode, useMemo, useRef, useState } from "react";
+import { CrochetWorkspaceSvg, type WorkspaceViewMode } from "./CrochetWorkspaceSvg";
 import {
   type ConstructionMode,
   type CrochetProject,
@@ -71,6 +71,13 @@ type RowDraft = {
 type ProjectType = "blanket" | "pillow-cover" | "purse" | "shirt" | "pants";
 type ToolDrawer = "settings" | "library" | "project" | null;
 type TopMenu = "file" | "edit" | "view" | null;
+type FloatingPanelId = "build" | "inspector" | "structure";
+type FloatingPanelState = {
+  x: number;
+  y: number;
+  collapsed: boolean;
+};
+type FloatingPanelStateMap = Record<FloatingPanelId, FloatingPanelState>;
 type PrimaryToolId =
   | "select"
   | `stitch:${string}`
@@ -469,6 +476,60 @@ function TechniqueSymbol({ symbol }: { symbol: CrochetChartSymbol }) {
   );
 }
 
+type FloatingToolboxProps = {
+  id: FloatingPanelId;
+  title: string;
+  state: FloatingPanelState;
+  onMove: (id: FloatingPanelId, position: Pick<FloatingPanelState, "x" | "y">) => void;
+  onToggle: (id: FloatingPanelId) => void;
+  children: ReactNode;
+};
+
+function FloatingToolbox({ id, title, state, onMove, onToggle, children }: FloatingToolboxProps) {
+  function startDrag(event: ReactPointerEvent<HTMLDivElement>) {
+    const startX = event.clientX;
+    const startY = event.clientY;
+    const origin = { x: state.x, y: state.y };
+    event.currentTarget.setPointerCapture(event.pointerId);
+
+    function movePanel(moveEvent: PointerEvent) {
+      onMove(id, {
+        x: Math.max(8, origin.x + moveEvent.clientX - startX),
+        y: Math.max(8, origin.y + moveEvent.clientY - startY),
+      });
+    }
+
+    function stopDrag() {
+      window.removeEventListener("pointermove", movePanel);
+      window.removeEventListener("pointerup", stopDrag);
+    }
+
+    window.addEventListener("pointermove", movePanel);
+    window.addEventListener("pointerup", stopDrag);
+  }
+
+  return (
+    <section
+      className={`floating-toolbox floating-toolbox-${id}${state.collapsed ? " is-collapsed" : ""}`}
+      style={{ transform: `translate(${state.x}px, ${state.y}px)` }}
+      aria-label={title}
+    >
+      <div className="floating-toolbox-header" onPointerDown={startDrag}>
+        <strong>{title}</strong>
+        <button
+          type="button"
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={() => onToggle(id)}
+          aria-expanded={!state.collapsed}
+        >
+          {state.collapsed ? "Open" : "Hide"}
+        </button>
+      </div>
+      {!state.collapsed ? <div className="floating-toolbox-body">{children}</div> : null}
+    </section>
+  );
+}
+
 export function FreestyleEditor() {
   const createId = useRef(createIdFactory());
   const [project, setProject] = useState(() => createFreestyleProject());
@@ -489,6 +550,13 @@ export function FreestyleEditor() {
   const [activeDrawer, setActiveDrawer] = useState<ToolDrawer>(null);
   const [topMenu, setTopMenu] = useState<TopMenu>(null);
   const [menuMessage, setMenuMessage] = useState("");
+  const [viewMode, setViewMode] = useState<WorkspaceViewMode>("construction");
+  const [viewport, setViewport] = useState({ zoom: 1, panX: 0, panY: 0 });
+  const [floatingPanels, setFloatingPanels] = useState<FloatingPanelStateMap>({
+    build: { x: 18, y: 96, collapsed: false },
+    inspector: { x: 620, y: 338, collapsed: false },
+    structure: { x: 1048, y: 338, collapsed: false },
+  });
   const [squareTemplateId, setSquareTemplateId] =
     useState<GrannySquareTemplateId>("traditional-granny-square");
 
@@ -535,6 +603,26 @@ export function FreestyleEditor() {
 
   function showPlannedFileAction(action: string) {
     setMenuMessage(`${action} is planned for save/export persistence.`);
+  }
+
+  function moveFloatingPanel(id: FloatingPanelId, position: Pick<FloatingPanelState, "x" | "y">) {
+    setFloatingPanels((current) => ({
+      ...current,
+      [id]: {
+        ...current[id],
+        ...position,
+      },
+    }));
+  }
+
+  function toggleFloatingPanel(id: FloatingPanelId) {
+    setFloatingPanels((current) => ({
+      ...current,
+      [id]: {
+        ...current[id],
+        collapsed: !current[id].collapsed,
+      },
+    }));
   }
 
   function uploadPatternFile(file: File) {
@@ -1080,6 +1168,53 @@ export function FreestyleEditor() {
           </button>
           {topMenu === "view" ? (
             <div className="canvas-menu-dropdown view-menu-dropdown" role="menu">
+              <h3>Workspace view</h3>
+              <div className="segmented-field" role="radiogroup" aria-label="Workspace view mode">
+                <label>
+                  <input
+                    type="radio"
+                    name="workspace-view-mode"
+                    checked={viewMode === "construction"}
+                    onChange={() => setViewMode("construction")}
+                  />
+                  Construction
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="workspace-view-mode"
+                    checked={viewMode === "preview"}
+                    onChange={() => setViewMode("preview")}
+                  />
+                  Preview
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="workspace-view-mode"
+                    checked={viewMode === "split"}
+                    onChange={() => setViewMode("split")}
+                  />
+                  Split
+                </label>
+              </div>
+              <label>
+                Zoom
+                <input
+                  type="range"
+                  min="45"
+                  max="260"
+                  value={Math.round(viewport.zoom * 100)}
+                  onChange={(event) => setViewport({ ...viewport, zoom: Number(event.target.value) / 100 })}
+                />
+              </label>
+              <div className="menu-action-row">
+                <button type="button" onClick={() => setViewport({ ...viewport, panX: viewport.panX - 24 })}>Pan left</button>
+                <button type="button" onClick={() => setViewport({ ...viewport, panX: viewport.panX + 24 })}>Pan right</button>
+                <button type="button" onClick={() => setViewport({ ...viewport, panY: viewport.panY - 24 })}>Pan up</button>
+                <button type="button" onClick={() => setViewport({ ...viewport, panY: viewport.panY + 24 })}>Pan down</button>
+                <button type="button" onClick={() => setViewport({ zoom: 1, panX: 0, panY: 0 })}>Reset canvas</button>
+              </div>
               <h3>360 project view</h3>
               <div className="rotation-controls menu-rotation-controls" aria-label="360 project view controls">
                 <label>
@@ -1222,32 +1357,80 @@ export function FreestyleEditor() {
           </button>
         </section>
 
-        <section className="context-tool-panel toolbox-panel" aria-label="Build toolbox">
-          <div className="context-tool-heading">
-            <span>Active tool</span>
-            <strong>{getStitchDefinition(addDraft.stitchId).abbreviation} row</strong>
-            {techniqueMessage ? <small>{techniqueMessage}</small> : null}
+        <FloatingToolbox
+          id="build"
+          title="Build"
+          state={floatingPanels.build}
+          onMove={moveFloatingPanel}
+          onToggle={toggleFloatingPanel}
+        >
+          <div className="floating-build-grid">
+            <section className="toolbox-section">
+              <h3>Stitches</h3>
+              <StitchIconMenu
+                selectedStitchId={addDraft.stitchId}
+                onSelect={(stitchId) => chooseStitchTool(stitchId)}
+                idPrefix="floating-build"
+              />
+            </section>
+
+            <section className="toolbox-section">
+              <h3>Action window</h3>
+              <DraftFields
+                draft={addDraft}
+                onChange={setAddDraft}
+                idPrefix="add-row"
+                estimate={addEstimate}
+                showStitchMenu={false}
+              />
+              {addErrors.length > 0 ? (
+                <ul className="form-errors" aria-live="polite">
+                  {addErrors.map((error) => (
+                    <li key={error}>{error}</li>
+                  ))}
+                </ul>
+              ) : null}
+              <button className="button primary dark-button full-width-action" type="button" onClick={addRow}>
+                Add row to {object?.name ?? "piece"}
+              </button>
+            </section>
+
+            <section className="toolbox-section">
+              <h3>Techniques</h3>
+              <div className="compact-technique-grid">
+                {crochetTechniqueGroups.slice(0, 3).flatMap((group) =>
+                  group.techniques.slice(0, 4).map((technique) => (
+                    <button key={technique.id} type="button" className="compact-technique-tool" onClick={() => selectTechnique(technique)}>
+                      <TechniqueSymbol symbol={chartSymbolForTechnique(technique)} />
+                      <span>{technique.abbreviation ?? technique.name}</span>
+                    </button>
+                  )),
+                )}
+              </div>
+              {techniqueMessage ? <p className="estimate-note">{techniqueMessage}</p> : null}
+            </section>
+
+            <section className="toolbox-section">
+              <h3>Construction</h3>
+              <div className="menu-action-row">
+                <button type="button" onClick={makePanel}>Add panel</button>
+                <button type="button" onClick={() => makeGrannySquare()}>New square</button>
+                <button type="button" onClick={joinActivePanel}>Join panels</button>
+              </div>
+            </section>
+
+            <section className="toolbox-section">
+              <h3>Shaping</h3>
+              <div className="menu-action-row">
+                <button type="button" onClick={() => activatePrimaryTool("increase")}>Increase</button>
+                <button type="button" onClick={() => activatePrimaryTool("decrease")}>Decrease</button>
+                <button type="button" onClick={() => setAddDraft((draft) => ({ ...draft, repeatCount: String(Number(draft.repeatCount || 1) + 1) }))}>
+                  Repeat row
+                </button>
+              </div>
+            </section>
           </div>
-          <div className="context-row-fields">
-            <DraftFields
-              draft={addDraft}
-              onChange={setAddDraft}
-              idPrefix="add-row"
-              estimate={addEstimate}
-              showStitchMenu={false}
-            />
-          </div>
-          {addErrors.length > 0 ? (
-            <ul className="form-errors" aria-live="polite">
-              {addErrors.map((error) => (
-                <li key={error}>{error}</li>
-              ))}
-            </ul>
-          ) : null}
-          <button className="button primary dark-button add-from-context" type="button" onClick={addRow}>
-            Add row to {object?.name ?? "piece"}
-          </button>
-        </section>
+        </FloatingToolbox>
 
         {activeDrawer ? (
           <section className="tool-drawer-panel" aria-label={`${activeDrawer} drawer`}>
@@ -1401,12 +1584,21 @@ export function FreestyleEditor() {
           <CrochetWorkspaceSvg
             model={svgModel}
             rotation={rotation}
+            viewport={viewport}
+            viewMode={viewMode}
             onSelectRow={selectRow}
             onClearSelection={() => setSelectedRowId("")}
+            onViewportChange={setViewport}
           />
         </section>
 
-        <aside className="freestyle-output toolbox-panel" aria-label="Properties toolbox">
+        <FloatingToolbox
+          id="inspector"
+          title="Selection Inspector"
+          state={floatingPanels.inspector}
+          onMove={moveFloatingPanel}
+          onToggle={toggleFloatingPanel}
+        >
           <section className="simulation-card selected-properties" aria-label="Selected row properties">
             <h2>Selected row</h2>
             <p>
@@ -1557,7 +1749,15 @@ export function FreestyleEditor() {
               </div>
             </section>
           ) : null}
+        </FloatingToolbox>
 
+        <FloatingToolbox
+          id="structure"
+          title="Project Structure"
+          state={floatingPanels.structure}
+          onMove={moveFloatingPanel}
+          onToggle={toggleFloatingPanel}
+        >
           <section className="simulation-card compact-navigator" aria-label="Compact object navigator">
             <h2>Project pieces</h2>
             <div className="panel-tools">
@@ -1653,8 +1853,7 @@ export function FreestyleEditor() {
               )}
             </ol>
           </section>
-
-        </aside>
+        </FloatingToolbox>
       </div>
     </section>
   );

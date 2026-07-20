@@ -19,7 +19,8 @@
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
-  transition: transform 180ms ease;
+  transition: transform 140ms ease;
+  transform-origin: center center;
 }
 
 .svg-blank-canvas {
@@ -122,6 +123,32 @@
 .texture-tunisian-simple-stitch,
 .texture-tunisian-knit-stitch {
   stroke: rgba(37, 29, 25, 0.4);
+}
+
+.svg-realistic-preview {
+  filter: url("#fibercad-yarn-depth");
+  opacity: 0.92;
+}
+
+.svg-realistic-preview .svg-row-fill {
+  opacity: 0.94;
+}
+
+.svg-realistic-preview .stitch-thread {
+  stroke-width: 0.075;
+  stroke: rgba(255, 250, 243, 0.48);
+}
+
+.workspace-view-preview .svg-object-frame,
+.workspace-view-preview .svg-row-outline,
+.workspace-view-preview .svg-row-label,
+.workspace-view-preview .svg-row-technique-symbols {
+  opacity: 0;
+}
+
+.workspace-view-split .svg-realistic-preview {
+  transform: translateX(0.1px);
+  opacity: 0.58;
 }
 
 .svg-row-technique-symbols {
@@ -493,6 +520,145 @@
 .floating-canvas-layout .freestyle-output {
   left: auto;
   width: min(820px, calc(48vw - 24px));
+}
+
+.floating-toolbox {
+  position: absolute;
+  z-index: 9;
+  width: min(420px, calc(100vw - 32px));
+  max-height: min(620px, calc(100vh - 160px));
+  overflow: hidden;
+  border: 1px solid rgba(58, 46, 40, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 250, 243, 0.94);
+  box-shadow: 0 22px 52px rgba(34, 25, 20, 0.2);
+  backdrop-filter: blur(16px);
+}
+
+.floating-toolbox-build {
+  width: min(520px, calc(100vw - 32px));
+}
+
+.floating-toolbox-inspector,
+.floating-toolbox-structure {
+  width: min(360px, calc(100vw - 32px));
+  max-height: min(390px, calc(100vh - 180px));
+}
+
+.floating-toolbox-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 9px 10px;
+  border-bottom: 1px solid rgba(58, 46, 40, 0.12);
+  background: rgba(255, 255, 255, 0.46);
+  cursor: grab;
+  user-select: none;
+}
+
+.floating-toolbox-header:active {
+  cursor: grabbing;
+}
+
+.floating-toolbox-header strong {
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 950;
+}
+
+.floating-toolbox-header button {
+  min-height: 28px;
+  padding: 4px 8px;
+  border: 1px solid rgba(58, 46, 40, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.68);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.floating-toolbox-body {
+  max-height: calc(min(620px, 100vh - 160px) - 46px);
+  overflow: auto;
+  padding: 10px;
+}
+
+.floating-toolbox.is-collapsed {
+  width: 180px;
+}
+
+.floating-build-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.toolbox-section {
+  display: grid;
+  gap: 8px;
+  padding: 9px;
+  border: 1px solid rgba(58, 46, 40, 0.11);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.48);
+}
+
+.toolbox-section h3 {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.toolbox-section label {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.toolbox-section input[type="number"],
+.toolbox-section input[type="text"] {
+  width: 100%;
+}
+
+.toolbox-section .color-input-row {
+  grid-template-columns: 82px minmax(0, 1fr);
+}
+
+.toolbox-section .segmented-field {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.compact-technique-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+  gap: 7px;
+}
+
+.compact-technique-tool {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: 6px;
+  align-items: center;
+  min-height: 40px;
+  padding: 6px 7px;
+  border: 1px solid rgba(58, 46, 40, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.56);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 850;
+  text-align: left;
+  cursor: pointer;
+}
+
+.compact-technique-tool .technique-symbol {
+  grid-row: auto;
+  width: 24px;
+  height: 24px;
 }
 
 .primary-tool-dock {

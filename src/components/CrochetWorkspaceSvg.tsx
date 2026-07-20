@@ -6,11 +6,22 @@ type Rotation = {
   z: number;
 };
 
+export type WorkspaceViewMode = "construction" | "preview" | "split";
+
+type WorkspaceViewport = {
+  zoom: number;
+  panX: number;
+  panY: number;
+};
+
 type CrochetWorkspaceSvgProps = {
   model: SvgWorkspaceModel;
   rotation: Rotation;
+  viewport: WorkspaceViewport;
+  viewMode: WorkspaceViewMode;
   onSelectRow: (rowId: string) => void;
   onClearSelection: () => void;
+  onViewportChange: (viewport: WorkspaceViewport) => void;
 };
 
 function stitchMarks(row: SvgRowRenderModel) {
@@ -144,15 +155,103 @@ function seamEdgePath(object: SvgWorkspaceModel["objects"][number], edge: string
 export function CrochetWorkspaceSvg({
   model,
   rotation,
+  viewport,
+  viewMode,
   onSelectRow,
   onClearSelection,
+  onViewportChange,
 }: CrochetWorkspaceSvgProps) {
   const canvasTransform = {
-    transform: `perspective(980px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg) rotateZ(${rotation.z}deg)`,
+    transform: `translate(${viewport.panX}px, ${viewport.panY}px) scale(${viewport.zoom}) perspective(980px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg) rotateZ(${rotation.z}deg)`,
   };
+  const showConstruction = viewMode === "construction" || viewMode === "split";
+  const showPreview = viewMode === "preview" || viewMode === "split";
+
+  function renderRows(className = "", interactive = true) {
+    return model.rows.map((row) => (
+      <g
+        key={`${className}-${row.id}`}
+        className={`${className} svg-row crochet-strip${row.selected ? " is-selected" : ""}`}
+        data-svg-row-id={interactive ? row.id : undefined}
+        data-svg-object-id={interactive ? row.objectId : undefined}
+        tabIndex={interactive ? 0 : undefined}
+        role={interactive ? "button" : "presentation"}
+        aria-label={interactive ? `Select ${row.panelName} ${row.label}` : undefined}
+        onClick={(event) => {
+          if (!interactive) {
+            return;
+          }
+          event.stopPropagation();
+          onSelectRow(row.id);
+        }}
+        onKeyDown={(event) => {
+          if (!interactive) {
+            return;
+          }
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onSelectRow(row.id);
+          }
+        }}
+      >
+        <rect
+          className="svg-row-fill"
+          x={row.x}
+          y={row.y}
+          width={row.width}
+          height={row.height}
+          rx="0.08"
+          fill={row.colorHex}
+        />
+        <g className={`stitch-thread ${row.textureId}`}>{stitchMarks(row)}</g>
+        <rect
+          className="svg-row-highlight"
+          x={row.x}
+          y={row.y}
+          width={row.width}
+          height={row.height}
+          rx="0.08"
+        />
+        <rect
+          className="svg-row-outline"
+          x={row.x}
+          y={row.y}
+          width={row.width}
+          height={row.height}
+          rx="0.08"
+        />
+        <text
+          className="svg-row-label"
+          x={row.x + Math.min(0.28, row.width / 8)}
+          y={row.y + Math.max(0.18, row.height / 2)}
+        >
+          {row.label}
+        </text>
+        {row.chartSymbols.length > 1 ? (
+          <g
+            className="svg-row-technique-symbols"
+            transform={`translate(${row.x + row.width - Math.min(row.width * 0.34, 1.1)} ${row.y + 0.08}) scale(${Math.min(row.height, 0.5)})`}
+          >
+            {row.chartSymbols.slice(1, 5).map((symbol, index) => rowTechniqueSymbol(symbol, index))}
+          </g>
+        ) : null}
+      </g>
+    ));
+  }
 
   return (
-    <div className="svg-stage blank-canvas-stage" data-visual-stage>
+    <div
+      className={`svg-stage blank-canvas-stage workspace-view-${viewMode}`}
+      data-visual-stage
+      onWheel={(event) => {
+        if (!event.ctrlKey) {
+          return;
+        }
+        event.preventDefault();
+        const nextZoom = Math.min(2.6, Math.max(0.45, viewport.zoom - event.deltaY * 0.0015));
+        onViewportChange({ ...viewport, zoom: nextZoom });
+      }}
+    >
       <div className="workspace-rotator" style={canvasTransform}>
         <svg
           data-svg-workspace
@@ -173,6 +272,14 @@ export function CrochetWorkspaceSvg({
             height={model.viewBox.height}
             className="svg-blank-canvas"
           />
+          <defs>
+            <filter id="fibercad-yarn-depth" x="-10%" y="-30%" width="120%" height="160%">
+              <feDropShadow dx="0" dy="0.035" stdDeviation="0.035" floodColor="#211b18" floodOpacity="0.22" />
+              <feSpecularLighting surfaceScale="1.2" specularConstant="0.28" specularExponent="18" lightingColor="#fffaf3">
+                <feDistantLight azimuth="235" elevation="55" />
+              </feSpecularLighting>
+            </filter>
+          </defs>
 
           {model.empty ? (
             <g>
@@ -250,69 +357,8 @@ export function CrochetWorkspaceSvg({
             </g>
           ))}
 
-          {model.rows.map((row) => (
-            <g
-              key={row.id}
-              className={`svg-row crochet-strip${row.selected ? " is-selected" : ""}`}
-              data-svg-row-id={row.id}
-              data-svg-object-id={row.objectId}
-              tabIndex={0}
-              role="button"
-              aria-label={`Select ${row.panelName} ${row.label}`}
-              onClick={(event) => {
-                event.stopPropagation();
-                onSelectRow(row.id);
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  onSelectRow(row.id);
-                }
-              }}
-            >
-              <rect
-                className="svg-row-fill"
-                x={row.x}
-                y={row.y}
-                width={row.width}
-                height={row.height}
-                rx="0.08"
-                fill={row.colorHex}
-              />
-              <g className={`stitch-thread ${row.textureId}`}>{stitchMarks(row)}</g>
-              <rect
-                className="svg-row-highlight"
-                x={row.x}
-                y={row.y}
-                width={row.width}
-                height={row.height}
-                rx="0.08"
-              />
-              <rect
-                className="svg-row-outline"
-                x={row.x}
-                y={row.y}
-                width={row.width}
-                height={row.height}
-                rx="0.08"
-              />
-              <text
-                className="svg-row-label"
-                x={row.x + Math.min(0.28, row.width / 8)}
-                y={row.y + Math.max(0.18, row.height / 2)}
-              >
-                {row.label}
-              </text>
-              {row.chartSymbols.length > 1 ? (
-                <g
-                  className="svg-row-technique-symbols"
-                  transform={`translate(${row.x + row.width - Math.min(row.width * 0.34, 1.1)} ${row.y + 0.08}) scale(${Math.min(row.height, 0.5)})`}
-                >
-                  {row.chartSymbols.slice(1, 5).map((symbol, index) => rowTechniqueSymbol(symbol, index))}
-                </g>
-              ) : null}
-            </g>
-          ))}
+          {showPreview ? <g className="svg-realistic-preview">{renderRows("svg-preview-row", false)}</g> : null}
+          {showConstruction ? <g className="svg-construction-view">{renderRows()}</g> : null}
         </svg>
       </div>
     </div>

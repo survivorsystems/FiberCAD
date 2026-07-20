@@ -47,6 +47,8 @@ let toolboxTop = 0;
 let viewportHeight = 0;
 let fileMenuVisible = false;
 let viewMenuVisible = false;
+let inspectorVisible = false;
+let structureVisible = false;
 
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
@@ -59,12 +61,14 @@ try {
   await page.locator("[data-visual-stage]").screenshot({ path: currentPath });
 
   renderedRows = await page.locator("[data-svg-row-id]").count();
-  const toolboxBox = await page.locator(".toolbox-panel[aria-label='Build toolbox']").boundingBox();
+  const toolboxBox = await page.locator(".floating-toolbox-build[aria-label='Build']").boundingBox();
   if (!toolboxBox) {
     throw new Error("Build toolbox was not visible.");
   }
   toolboxTop = toolboxBox.y;
   viewportHeight = page.viewportSize()?.height ?? 0;
+  inspectorVisible = await page.locator(".floating-toolbox-inspector[aria-label='Selection Inspector']").isVisible();
+  structureVisible = await page.locator(".floating-toolbox-structure[aria-label='Project Structure']").isVisible();
 
   await page.getByRole("button", { name: "File" }).click();
   fileMenuVisible = await page.getByText("Export pattern PDF").isVisible();
@@ -81,8 +85,12 @@ if (renderedRows !== 1) {
   throw new Error(`Expected one rendered SVG row, found ${renderedRows}.`);
 }
 
-if (toolboxTop < viewportHeight * 0.5) {
-  throw new Error(`Expected the build toolbox to float near the bottom, top was ${toolboxTop}px.`);
+if (toolboxTop > viewportHeight * 0.65) {
+  throw new Error(`Expected the Build floating toolbox to stay above the bottom quick dock, top was ${toolboxTop}px.`);
+}
+
+if (!inspectorVisible || !structureVisible) {
+  throw new Error("Expected Selection Inspector and Project Structure floating toolboxes to be visible.");
 }
 
 if (!fileMenuVisible) {
